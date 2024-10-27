@@ -1,13 +1,11 @@
 import { Helmet } from '@modern-js/runtime/head';
-import { Flex } from 'antd';
 
 const Page = () => {
   return (
     <>
       <Helmet>
-        <title>首页</title>
+        <title>模组</title>
       </Helmet>
-      <Flex>首页</Flex>
     </>
   );
 };
