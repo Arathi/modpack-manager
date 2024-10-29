@@ -8,19 +8,31 @@ type Props = Omit<FlexProps, 'children'> & {
 
 const ModCard: React.FC<Props> = props => {
   const { mod } = props;
-  const { author, name, summary, avatarUrl } = mod;
+  const { slug, author, name, summary, avatarUrl } = mod;
+  const authorHref = `https://www.curseforge.com/members/${author.name}`;
+  const modHref = `/mod/${slug}`;
+
   return (
     <Flex className={stylesheet['mod-card']} {...props} gap={8}>
       <Flex>
         <Image src={avatarUrl} width={100} height={100} />
       </Flex>
       <Flex vertical>
-        <Flex gap={8}>
-          <strong>{author.name}</strong>
-          <strong>/</strong>
-          <strong>{name}</strong>
+        <Flex className={stylesheet['mod-names']} align="end" gap={4}>
+          <a href={authorHref} className={stylesheet['author-name']}>
+            {author.name}
+          </a>
+          <span>/</span>
+          <a href={modHref} className={stylesheet['mod-name']}>
+            {name}
+          </a>
         </Flex>
-        <Flex>{summary}</Flex>
+        <Flex flex={1} className={stylesheet['mod-summary']}>
+          {summary}
+        </Flex>
+        <Flex>
+          <div />
+        </Flex>
       </Flex>
     </Flex>
   );

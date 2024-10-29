@@ -4,6 +4,7 @@ export default interface Mod {
   summary: string;
   avatarUrl: string;
   author: Author;
+  slug: string;
 }
 
 interface Author {

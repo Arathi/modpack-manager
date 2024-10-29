@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@amcs/curseforge-api':
+        specifier: ^0.91.0
+        version: 0.91.0
       '@modern-js/runtime':
         specifier: 2.60.5
         version: 2.60.5(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -62,6 +65,9 @@ importers:
         version: 5.0.4
 
 packages:
+
+  '@amcs/curseforge-api@0.91.0':
+    resolution: {integrity: sha512-lQBhVjyTdF8kGtT5TZ+mXxZqz/HPrNeLPazJP2HsGsj+JvX9C5jfhBXw6Cpm4j16DjGA05qPrAgOc2uqGYBGqQ==}
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -4663,6 +4669,8 @@ packages:
     engines: {node: '>=12.20'}
 
 snapshots:
+
+  '@amcs/curseforge-api@0.91.0': {}
 
   '@ampproject/remapping@2.3.0':
     dependencies:

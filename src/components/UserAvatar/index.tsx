@@ -1,4 +1,4 @@
-import { Avatar, Button, Flex, List, Popover } from 'antd';
+import { Avatar, Button, Flex, Popover } from 'antd';
 
 const UserAvatar = () => {
   const title = (

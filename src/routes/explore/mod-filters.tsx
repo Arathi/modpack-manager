@@ -1,10 +1,17 @@
+import Quilt from '@/components/Icons/Quilt';
+import SVGIcon from '@/components/Icons/SvgIcon';
+import FabricSrc from '@/icons/fabric.svg';
+import ForgeSrc from '@/icons/forge.svg';
+import NeoForgeSrc from '@/icons/neo-forge.svg';
+import QuiltSrc from '@/icons/quilt.svg';
 import {
   Checkbox,
   Collapse,
   type CollapseProps,
   Flex,
-  Input,
+  Image,
   Select,
+  Space,
 } from 'antd';
 import stylesheet from './mod-filters.module.less';
 
@@ -16,10 +23,30 @@ const ModFilters = () => {
       children: (
         <>
           <Checkbox.Group style={{ flexDirection: 'column' }}>
-            <Checkbox value="forge">Forge</Checkbox>
-            <Checkbox value="fabric">Fabric</Checkbox>
-            <Checkbox value="quilt">Quilt</Checkbox>
-            <Checkbox value="neo-forge">NeoForge</Checkbox>
+            <Checkbox value="forge">
+              <Space>
+                <SVGIcon src={ForgeSrc} />
+                <span>Forge</span>
+              </Space>
+            </Checkbox>
+            <Checkbox value="fabric">
+              <Space>
+                <SVGIcon src={FabricSrc} />
+                <span>Fabric</span>
+              </Space>
+            </Checkbox>
+            <Checkbox value="quilt">
+              <Space>
+                <Quilt />
+                <span>Quilt</span>
+              </Space>
+            </Checkbox>
+            <Checkbox value="neo-forge">
+              <Space>
+                <SVGIcon src={NeoForgeSrc} />
+                <span>NeoForge</span>
+              </Space>
+            </Checkbox>
           </Checkbox.Group>
         </>
       ),

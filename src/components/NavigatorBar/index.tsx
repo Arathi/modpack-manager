@@ -1,7 +1,8 @@
 import { type To, useLocation, useNavigate } from '@modern-js/runtime/router';
-import { Avatar, Flex } from 'antd';
+import { Flex } from 'antd';
 import { type CSSProperties, useMemo, useState } from 'react';
 import UserAvatar from '../UserAvatar';
+
 import stylesheet from './index.module.less';
 
 interface Route {
