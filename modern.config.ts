@@ -1,7 +1,10 @@
 import { appTools, defineConfig } from '@modern-js/app-tools';
 
 // https://modernjs.dev/en/configure/app/usage
-export default defineConfig({
+export default defineConfig<'rspack'>({
+  server: {
+    port: 39360,
+  },
   runtime: {
     router: true,
   },
