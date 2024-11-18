@@ -3,19 +3,28 @@ import { Flex, Image } from 'antd';
 const Logo = () => {
   return (
     <>
-      <Flex
-        vertical
-        justify="center"
-        align="start"
-        style={{
-          width: 160,
-          height: 64,
-          // backgroundColor: 'rgba(0, 255, 0, 0.125)',
-          fontWeight: 'bold',
-        }}
-      >
-        <div>Modpack</div>
-        <div>Manager</div>
+      <Flex align="center" gap={8}>
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            backgroundColor: '#999999',
+            borderRadius: 8,
+          }}
+        />
+        <Flex
+          vertical
+          justify="center"
+          align="center"
+          style={{
+            height: 64,
+            fontWeight: 'bold',
+            userSelect: 'none',
+          }}
+        >
+          <div>Modpack</div>
+          <div>Manager</div>
+        </Flex>
       </Flex>
     </>
   );

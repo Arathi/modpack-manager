@@ -1,42 +1,58 @@
-import {
-  Checkbox,
-  Collapse,
-  type CollapseProps,
-  Divider,
-  Flex,
-  Radio,
-} from 'antd';
+import { Checkbox, Collapse, type CollapseProps, Flex, Radio } from 'antd';
 import type { CheckboxGroupProps } from 'antd/es/checkbox';
+import { useState } from 'react';
 import { FaComputer, FaServer } from 'react-icons/fa6';
 
+enum Source {
+  CurseForge = 'curseforge',
+  Modrinth = 'modrinth',
+}
+
+enum ModLoader {
+  Forge = 'forge',
+  Fabric = 'fabric',
+  Quilt = 'quilt',
+  NeoForge = 'neoforge',
+}
+
+enum Environment {
+  Client = 'client',
+  Server = 'server',
+}
+
 const FilterAside = () => {
+  const [source, setSource] = useState<Source>(Source.CurseForge);
+  const [loaders, setLoaders] = useState<ModLoader[]>([]);
+  const [versions, setVersions] = useState<string[]>([]);
+  const [environments, setEnvironments] = useState<Environment[]>([]);
+
   const sourceOptions = [
     {
       label: 'CurseForge',
-      value: 'curseforge',
+      value: Source.CurseForge,
     },
     {
       label: 'Modrinth',
-      value: 'modrinth',
+      value: Source.Modrinth,
     },
   ];
 
   const loaderOptions = [
     {
-      label: 'Forge',
-      value: 'forge',
+      label: <Flex>Forge</Flex>,
+      value: ModLoader.Forge,
     },
     {
-      label: 'Fabric',
-      value: 'fabric',
+      label: <Flex>Fabric</Flex>,
+      value: ModLoader.Fabric,
     },
     {
-      label: 'Quilt',
-      value: 'quilt',
+      label: <Flex>Quilt</Flex>,
+      value: ModLoader.Quilt,
     },
     {
-      label: 'NeoForge',
-      value: 'neoforge',
+      label: <Flex>NeoForge</Flex>,
+      value: ModLoader.NeoForge,
     },
   ];
 
@@ -71,7 +87,7 @@ const FilterAside = () => {
     },
   ];
 
-  const envOptions = [
+  const environmentOptions = [
     {
       label: (
         <Flex align="center" gap={4}>
@@ -79,7 +95,7 @@ const FilterAside = () => {
           <span>客户端</span>
         </Flex>
       ),
-      value: 'client',
+      value: Environment.Client,
     },
     {
       label: (
@@ -88,7 +104,7 @@ const FilterAside = () => {
           <span>服务端</span>
         </Flex>
       ),
-      value: 'server',
+      value: Environment.Server,
     },
   ];
 
@@ -105,7 +121,14 @@ const FilterAside = () => {
       children: (
         <Radio.Group
           options={sourceOptions}
-          style={{ flexDirection: 'column', paddingLeft: 24, gap: 4 }}
+          value={source}
+          onChange={e => setSource(e.target.value)}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            paddingLeft: 24,
+            gap: 4,
+          }}
         />
       ),
     },
@@ -117,6 +140,8 @@ const FilterAside = () => {
       children: (
         <Checkbox.Group
           options={loaderOptions}
+          value={loaders}
+          onChange={values => setLoaders(values)}
           style={{ flexDirection: 'column', paddingLeft: 24, gap: 4 }}
         />
       ),
@@ -131,6 +156,8 @@ const FilterAside = () => {
       children: (
         <Checkbox.Group
           options={versionOptions}
+          value={versions}
+          onChange={values => setVersions(values)}
           style={{ flexDirection: 'column', paddingLeft: 24, gap: 4 }}
         />
       ),
@@ -144,7 +171,9 @@ const FilterAside = () => {
       ),
       children: (
         <Checkbox.Group
-          options={envOptions}
+          options={environmentOptions}
+          value={environments}
+          onChange={values => setEnvironments(values)}
           style={{ flexDirection: 'column', paddingLeft: 24, gap: 4 }}
         />
       ),

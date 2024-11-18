@@ -3,6 +3,7 @@ import FilterTop from '@/components/FilterTop';
 import Results from '@/components/Results';
 import { Helmet } from '@modern-js/runtime/head';
 import { Flex } from 'antd';
+import { useState } from 'react';
 
 const Page = () => {
   return (
