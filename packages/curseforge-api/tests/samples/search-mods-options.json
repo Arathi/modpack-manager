@@ -1,0 +1,7 @@
+{
+  "/categories/-": {"use_type": "Category"},
+  "/latestFiles/-": {"use_type": "object"},
+  "/latestFilesIndexes/-": {"use_type": "object"},
+  "/socialLinks/-": {"use_type": "object"},
+  "/serverAffiliation": {"use_type": "object"}
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@amcs/monorepo",
+  "version": "0.25.723",
+  "author": "Arathi of Nebnizilla",
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.2"
+  }
+}
