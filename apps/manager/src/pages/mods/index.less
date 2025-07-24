@@ -1,0 +1,43 @@
+.mod-loader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.mods {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  .left {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .collapse {
+      background-color: white;
+    }
+  }
+
+  .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .row {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+
+      .remains {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+        justify-content: end;
+      }
+    }
+  }
+}

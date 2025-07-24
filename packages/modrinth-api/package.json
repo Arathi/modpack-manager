@@ -1,6 +1,6 @@
 {
-  "name": "modrinth-api",
-  "version": "0.0.0",
+  "name": "@amcs/modrinth-api",
+  "version": "0.25.725",
   "type": "module",
   "exports": {
     ".": {
