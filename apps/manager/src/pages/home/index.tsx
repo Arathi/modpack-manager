@@ -1,10 +1,22 @@
 import { Button, Flex } from "antd";
-import { MdLogin, MdOutlineSettings } from "react-icons/md";
-import { NavLink, Outlet } from "react-router";
+import { MdLogin } from "react-icons/md";
+import { NavLink, Outlet, useNavigate, useNavigation } from "react-router";
+import { BsBox, BsBoxes } from "react-icons/bs";
+import { useEffect } from "react";
+
+import { Settings } from "./settings";
+import { init } from "@/store";
 
 import "./index.less";
 
 const Home = () => {
+  const navigate = useNavigate();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    init();
+  }, []);
+
   return (
     <div className="page home">
       <nav className="navigator-bar">
@@ -13,10 +25,18 @@ const Home = () => {
           <span>Manager</span>
         </div>
         <div className="links">
-          <NavLink className="nav-link" to="/mods">
+          <NavLink
+            className={({isActive}) => isActive ? "active" : ""}
+            to="/mods"
+          >
+            <BsBox />
             <span>Mods</span>
           </NavLink>
-          <NavLink className="nav-link" to="/modpacks">
+          <NavLink
+            className={({isActive}) => isActive ? "active" : ""}
+            to="/modpacks"
+          >
+            <BsBoxes />
             <span>Modpacks</span>
           </NavLink>
         </div>
@@ -24,12 +44,10 @@ const Home = () => {
           <Button variant="solid" color="primary">
             <Flex align="center" gap={8}>
               <MdLogin />
-              登录
+              <span>登录</span>
             </Flex>
           </Button>
-          <Button shape="circle">
-            <MdOutlineSettings size={18} />
-          </Button>
+          <Settings />
         </div>
       </nav>
       <main>

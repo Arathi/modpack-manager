@@ -9,8 +9,9 @@ import {
   type GetProps,
   type SelectProps,
   type SegmentedProps,
+  Flex,
 } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type HTMLAttributes } from "react";
 import type { Category } from "@amcs/core";
 import {
   Source,
@@ -35,9 +36,33 @@ import "./index.less";
 type CheckboxGroupProps<T> = GetProps<typeof Checkbox.Group<T>>;
 type CategoryID = Category["id"];
 
+const CategoryCheckbox: React.FC<{
+  category: Category;
+  className?: string;
+  style?: GetProps<typeof Checkbox>['style'];
+}> = ({ category, className, style }) => {
+  const classNames = ["category-checkbox", className];
+  let icon: React.ReactNode;
+  if (category.icon.startsWith("<svg") && category.icon.endsWith("</svg>")) {
+    // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+    icon = <div dangerouslySetInnerHTML={{ __html: category.icon }} />
+  } else if (category.icon.startsWith("https://") && category.icon.endsWith(".png")) {
+    icon = <img src={category.icon} alt={category.name} />;
+  }
+
+  return (
+    <Checkbox className={classNames.join(" ")} style={style}>
+      <Flex align="center" gap={8}>
+        { icon }
+        <span>{ category.name }</span>
+      </Flex>
+    </Checkbox>
+  );
+};
+
 const Mods = () => {
   const [source, setSource] = useState<Source>(Source.CurseForge);
-  const [minecraftVersion, setMinecraftVersion] = useState<string>();
+  const [gameVersion, setGameVersion] = useState<string>();
   const [modLoaders, setModLoaders] = useState<ModLoader[]>([]);
   const [categoryIds, setCategoryIds] = useState<CategoryID[]>([]);
 
@@ -72,7 +97,6 @@ const Mods = () => {
     },
   ];
 
-  const sortOrder = useMemo(() => (ascend ? "asc" : "desc"), [ascend]);
   const sortOrderIcon = useMemo(
     () => (ascend ? <ImSortAmountAsc /> : <ImSortAmountDesc />),
     [ascend],
@@ -99,14 +123,14 @@ const Mods = () => {
     },
   ];
 
-  const [minecraftVersions, setMinecraftVersions] = useState<string[]>([
+  const [gameVersions, setGameVersions] = useState<string[]>([
     "1.21.8",
     "1.21.6",
     "1.21.5",
     "1.21.1",
   ]);
 
-  const minecraftVersionOptions: SelectProps["options"] = minecraftVersions.map(
+  const gameVersionOptions: SelectProps["options"] = gameVersions.map(
     (v) => ({
       value: v,
       label: `Minecraft ${v}`,
@@ -155,12 +179,22 @@ const Mods = () => {
   const categoryOptions = useMemo(() => {
     const options: React.ReactNode[] = [];
     categories.forEach((c) => {
-      options.push(<Checkbox value={c.id}>{c.name}</Checkbox>);
+      options.push(
+        <Checkbox value={c.id}>
+          <Flex align="center" gap={8}>
+            <img src={c.icon} width={16} height={16} alt={`category ${c.id} icon`} />
+            <span style={{ userSelect: "none" }}>{c.name}</span>
+          </Flex>
+        </Checkbox>
+      );
       const children = c.children ?? [];
       children.forEach((cc) => {
         options.push(
           <Checkbox value={cc.id} style={{ marginLeft: 24 }}>
-            {cc.name}
+            <Flex align="center" gap={8}>
+              <img src={cc.icon} width={16} height={16} alt={`category ${c.id} icon`} />
+              <span style={{ userSelect: "none" }}>{cc.name}</span>
+            </Flex>
           </Checkbox>,
         );
       });
@@ -183,7 +217,7 @@ const Mods = () => {
   useEffect(() => {
     console.info("搜索条件发生变化：", {
       source,
-      minecraftVersion,
+      gameVersion,
       modLoaders,
       categoryIds,
       keyword,
@@ -194,7 +228,7 @@ const Mods = () => {
     });
   }, [
     source,
-    minecraftVersion,
+    gameVersion,
     modLoaders,
     categoryIds,
     keyword,
@@ -219,11 +253,11 @@ const Mods = () => {
         >
           <Collapse.Panel header="Minecraft版本" key="minecraft-versions">
             <Select
-              value={minecraftVersion}
-              options={minecraftVersionOptions}
+              value={gameVersion}
+              options={gameVersionOptions}
               onChange={(version) => {
                 console.info("Minecraft版本过滤器发生变化：", version);
-                setMinecraftVersion(version);
+                setGameVersion(version);
               }}
               placeholder="请选择"
               style={{
