@@ -1,23 +1,5 @@
-# Rslib project
+## 数据获取
 
-## Setup
-
-Install the dependencies:
-
-```bash
-pnpm install
 ```
-
-## Get started
-
-Build the library:
-
-```bash
-pnpm build
-```
-
-Build the library in watch mode:
-
-```bash
-pnpm dev
+document.body.querySelectorAll("div.rounded-2xl.bg-bg-raised:has(h3")
 ```

@@ -1,8 +1,8 @@
-import { Button } from "antd";
+import { Button, Flex } from "antd";
+import { MdLogin, MdOutlineSettings } from "react-icons/md";
 import { NavLink, Outlet } from "react-router";
 
 import "./index.less";
-import { LoginOutlined, SettingOutlined } from "@ant-design/icons";
 
 const Home = () => {
   return (
@@ -13,19 +13,30 @@ const Home = () => {
           <span>Manager</span>
         </div>
         <div className="links">
-          <NavLink className="" to="/mods">Mods</NavLink>
-          <NavLink className="" to="/modpacks">Modpacks</NavLink>
+          <NavLink className="nav-link" to="/mods">
+            <span>Mods</span>
+          </NavLink>
+          <NavLink className="nav-link" to="/modpacks">
+            <span>Modpacks</span>
+          </NavLink>
         </div>
         <div className="buttons">
-          <Button variant="solid" color="primary" icon={<LoginOutlined />}>登录</Button>
-          <Button shape="circle" icon={<SettingOutlined />} />
+          <Button variant="solid" color="primary">
+            <Flex align="center" gap={8}>
+              <MdLogin />
+              登录
+            </Flex>
+          </Button>
+          <Button shape="circle">
+            <MdOutlineSettings size={18} />
+          </Button>
         </div>
       </nav>
       <main>
         <Outlet />
       </main>
     </div>
-  )
+  );
 };
 
 export default Home;

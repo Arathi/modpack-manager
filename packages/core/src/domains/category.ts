@@ -4,4 +4,6 @@ export interface Category {
   id: ID;
   slug: string;
   name: string;
+  icon: string;
+  children?: Category[];
 }

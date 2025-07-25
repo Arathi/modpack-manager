@@ -3,6 +3,8 @@ import { test, expect } from "vitest";
 import { ClientAxios as Client } from "./client-axios";
 import { ModLoaderType } from "../src/schemas";
 
+const API_KEY = process.env.CURSE_FORGE_API_KEY;
+
 const JEI_ID = 238222;
 const JEI_SLUG = "jei";
 const JEI_NAME = "Just Enough Items (JEI)";
@@ -10,11 +12,11 @@ const JEI_SUMMARY = "View Items and Recipes";
 const JEI_LATEST_ID = 6767951;
 
 const client = new Client({
+  apiKey: API_KEY,
   proxy: {
     host: "127.0.0.1",
     port: 8118,
-    protocol: "http",
-  }
+  },
 });
 
 test("获取版本", async () => {
@@ -42,7 +44,7 @@ test("获取分类", async () => {
     return;
   }
 
-  expect(mods.slug).toBe('mc-mods');
+  expect(mods.slug).toBe("mc-mods");
   expect(mods.name).toBe("Mods");
 });
 
@@ -68,7 +70,7 @@ test("搜索模组", async () => {
 test("获取模组", async () => {
   const { data: jei } = await client.getMod(JEI_ID);
   console.info("jei = ", jei);
-  
+
   expect(jei.id).toBe(JEI_ID);
   expect(jei.name).toBe(JEI_NAME);
   expect(jei.summary).toBe(JEI_SUMMARY);

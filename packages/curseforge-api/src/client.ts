@@ -20,14 +20,13 @@ import {
 type SearchParams = Record<string, string | number | boolean | undefined>;
 
 const BASE_URL = "https://api.curseforge.com";
-const API_KEY = process.env.CURSE_FORGE_API_KEY ?? "";
-const GAME_ID_MINECRAFT = 432;
-const CLASS_ID_MC_MODS = 6;
 const DEFAULT_PAGE_SIZE = 50;
 const DEFAULT_INDEX = 0;
-
 const GET = "GET";
 const POST = "POST";
+
+export const GAME_ID_MINECRAFT = 432;
+export const CLASS_ID_MC_MODS = 6;
 
 export interface Options {
   baseURL?: string;
@@ -42,10 +41,10 @@ export interface Proxy {
 
 export abstract class Client {
   baseURL: string;
-  apiKey: string;
+  apiKey?: string;
   proxy?: Proxy;
 
-  constructor({ baseURL = BASE_URL, apiKey = API_KEY, proxy }: Options) {
+  constructor({ baseURL = BASE_URL, apiKey, proxy }: Options) {
     this.baseURL = baseURL;
     this.apiKey = apiKey;
     this.proxy = proxy;

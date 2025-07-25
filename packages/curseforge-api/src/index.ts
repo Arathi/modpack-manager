@@ -12,5 +12,5 @@ export type {
   PaginationResponse,
 } from "./schemas";
 
-export { Client } from "./client";
+export { Client, GAME_ID_MINECRAFT, CLASS_ID_MC_MODS } from "./client";
 export { ModLoaderType } from "./schemas";
