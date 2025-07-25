@@ -1,6 +1,6 @@
 {
   "name": "@amcs/curseforge-api",
-  "version": "0.25.723",
+  "version": "0.25.725",
   "type": "module",
   "exports": {
     ".": {

@@ -1,7 +1,21 @@
-import type { Category, GameVersionsByType, GameVersionType, GameVersionsByTypeV2, Mod, File } from "./schemas";
+import type {
+  Category,
+  GameVersionsByType,
+  GameVersionType,
+  GameVersionsByTypeV2,
+  Mod,
+  File,
+} from "./schemas";
 import { ModLoaderType } from "./schemas";
-import { GetModFilesParameters, SearchModsParameters } from "./schemas/parameters";
-import { DataResponse, ListResponse, PaginationResponse } from "./schemas/response";
+import {
+  GetModFilesParameters,
+  SearchModsParameters,
+} from "./schemas/parameters";
+import {
+  DataResponse,
+  ListResponse,
+  PaginationResponse,
+} from "./schemas/response";
 
 type SearchParams = Record<string, string | number | boolean | undefined>;
 
@@ -18,31 +32,42 @@ const POST = "POST";
 export interface Options {
   baseURL?: string;
   apiKey?: string;
+  proxy?: Proxy;
+}
+
+export interface Proxy {
+  host: string;
+  port: number;
 }
 
 export abstract class Client {
   baseURL: string;
   apiKey: string;
+  proxy?: Proxy;
 
-  constructor({
-    baseURL = BASE_URL,
-    apiKey = API_KEY,
-  }: Options) {
+  constructor({ baseURL = BASE_URL, apiKey = API_KEY, proxy }: Options) {
     this.baseURL = baseURL;
     this.apiKey = apiKey;
+    this.proxy = proxy;
   }
 
-  async getVersions(gameId: number = GAME_ID_MINECRAFT): Promise<ListResponse<GameVersionsByType>> {
+  async getVersions(
+    gameId: number = GAME_ID_MINECRAFT,
+  ): Promise<ListResponse<GameVersionsByType>> {
     const path = `/v1/games/${gameId}/versions`;
     return this.get(path);
   }
 
-  async getVersionTypes(gameId: number = GAME_ID_MINECRAFT): Promise<ListResponse<GameVersionType>> {
+  async getVersionTypes(
+    gameId: number = GAME_ID_MINECRAFT,
+  ): Promise<ListResponse<GameVersionType>> {
     const path = `/v1/games/${gameId}/version-types`;
     return this.get(path);
   }
 
-  async getVersionsV2(gameId: number = GAME_ID_MINECRAFT): Promise<ListResponse<GameVersionsByTypeV2>> {
+  async getVersionsV2(
+    gameId: number = GAME_ID_MINECRAFT,
+  ): Promise<ListResponse<GameVersionsByTypeV2>> {
     const path = `/v2/games/${gameId}/versions`;
     return this.get(path);
   }
@@ -52,9 +77,9 @@ export abstract class Client {
     classId,
     classesOnly,
   }: {
-    gameId?: number,
-    classId?: number,
-    classesOnly?: boolean,
+    gameId?: number;
+    classId?: number;
+    classesOnly?: boolean;
   } = {}): Promise<ListResponse<Category>> {
     const path = `/v1/categories`;
     return this.get(path, {
@@ -83,7 +108,7 @@ export abstract class Client {
     index = DEFAULT_INDEX,
     pageSize = DEFAULT_PAGE_SIZE,
   }: SearchModsParameters = {}): Promise<PaginationResponse<Mod>> {
-    const path = '/v1/mods/search';
+    const path = "/v1/mods/search";
     const params: SearchParams = {
       gameId,
       classId,
@@ -114,7 +139,7 @@ export abstract class Client {
 
     // modLoaderType / modLoaderTypes
     if (modLoaderTypeList !== undefined && modLoaderTypeList.length > 0) {
-      const names = modLoaderTypeList.map(mlt => ModLoaderType[mlt]);
+      const names = modLoaderTypeList.map((mlt) => ModLoaderType[mlt]);
       params.modLoaderTypes = `[${names.join(",")}]`;
     } else if (modLoaderType !== undefined) {
       params.modLoaderType = modLoaderType;
@@ -133,13 +158,16 @@ export abstract class Client {
     return this.get(path);
   }
 
-  async getModFiles(modId: number, {
-    gameVersion,
-    modLoaderType,
-    gameVersionTypeId,
-    index = DEFAULT_INDEX,
-    pageSize = DEFAULT_PAGE_SIZE,
-  }: GetModFilesParameters): Promise<PaginationResponse<File>> {
+  async getModFiles(
+    modId: number,
+    {
+      gameVersion,
+      modLoaderType,
+      gameVersionTypeId,
+      index = DEFAULT_INDEX,
+      pageSize = DEFAULT_PAGE_SIZE,
+    }: GetModFilesParameters,
+  ): Promise<PaginationResponse<File>> {
     const path = `/v1/mods/${modId}/files`;
     const params = {
       gameVersion,
