@@ -47,7 +47,7 @@ const CategoryCheckbox: React.FC<{
     // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
     icon = <div dangerouslySetInnerHTML={{ __html: category.icon }} />
   } else if (category.icon.startsWith("https://") && category.icon.endsWith(".png")) {
-    icon = <img src={category.icon} alt={category.name} />;
+    icon = <img src={category.icon} alt={category.name} width={16} height={16} />;
   }
 
   return (
@@ -180,22 +180,18 @@ const Mods = () => {
     const options: React.ReactNode[] = [];
     categories.forEach((c) => {
       options.push(
-        <Checkbox value={c.id}>
-          <Flex align="center" gap={8}>
-            <img src={c.icon} width={16} height={16} alt={`category ${c.id} icon`} />
-            <span style={{ userSelect: "none" }}>{c.name}</span>
-          </Flex>
-        </Checkbox>
+        // <Checkbox value={c.id}>
+        //   <Flex align="center" gap={8}>
+        //     <img src={c.icon} width={16} height={16} alt={`category ${c.id} icon`} />
+        //     <span style={{ userSelect: "none" }}>{c.name}</span>
+        //   </Flex>
+        // </Checkbox>
+        <CategoryCheckbox key={c.id} category={c} />
       );
       const children = c.children ?? [];
       children.forEach((cc) => {
         options.push(
-          <Checkbox value={cc.id} style={{ marginLeft: 24 }}>
-            <Flex align="center" gap={8}>
-              <img src={cc.icon} width={16} height={16} alt={`category ${c.id} icon`} />
-              <span style={{ userSelect: "none" }}>{cc.name}</span>
-            </Flex>
-          </Checkbox>,
+          <CategoryCheckbox key={cc.id} category={cc} style={{ marginLeft: 12 }} />
         );
       });
     });

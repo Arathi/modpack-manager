@@ -10,7 +10,8 @@ const routes = createBrowserRouter([
     children: [
       {
         path: "/mods",
-        element: <Mods />
+        element: <Mods />,
+        index: true,
       },
       {
         path: "/modpacks",

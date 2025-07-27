@@ -10,9 +10,6 @@ import { init } from "@/store";
 import "./index.less";
 
 const Home = () => {
-  const navigate = useNavigate();
-  const navigation = useNavigation();
-
   useEffect(() => {
     init();
   }, []);
