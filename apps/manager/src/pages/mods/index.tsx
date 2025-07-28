@@ -1,7 +1,16 @@
+import type { Category, Mod } from "@amcs/core";
+import {
+  ModLoader,
+  Source,
+  SortRule,
+  SortRuleNames,
+  SourceNames,
+} from "@amcs/core";
 import {
   Button,
   Checkbox,
   Collapse,
+  Flex,
   Input,
   Pagination,
   Segmented,
@@ -9,20 +18,16 @@ import {
   type GetProps,
   type SelectProps,
   type SegmentedProps,
-  Flex,
 } from "antd";
-import { useEffect, useMemo, useState, type HTMLAttributes } from "react";
-import type { Category } from "@amcs/core";
-import {
-  Source,
-  ModLoader,
-  SortRule,
-  SortRuleNames,
-  SourceNames,
-} from "@amcs/core";
+import { useEffect, useMemo, useState } from "react";
 import { ImSortAmountAsc, ImSortAmountDesc } from "react-icons/im";
 
-import { adapter as curseforge } from "@/utils/curseforge";
+import {
+  adapter as curseforge,
+  type SearchModsConditions,
+} from "@/utils/curseforge";
+import type { PagedResponse } from "@/utils/commons";
+import { ModCard } from "./mod-card";
 
 import CurseForgeLogo from "@/assets/curseforge.svg?react";
 import ModrinthLogo from "@/assets/modrinth.svg?react";
@@ -39,26 +44,33 @@ type CategoryID = Category["id"];
 const CategoryCheckbox: React.FC<{
   category: Category;
   className?: string;
-  style?: GetProps<typeof Checkbox>['style'];
+  style?: GetProps<typeof Checkbox>["style"];
 }> = ({ category, className, style }) => {
   const classNames = ["category-checkbox", className];
   let icon: React.ReactNode;
   if (category.icon.startsWith("<svg") && category.icon.endsWith("</svg>")) {
     // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-    icon = <div dangerouslySetInnerHTML={{ __html: category.icon }} />
-  } else if (category.icon.startsWith("https://") && category.icon.endsWith(".png")) {
-    icon = <img src={category.icon} alt={category.name} width={16} height={16} />;
+    icon = <div dangerouslySetInnerHTML={{ __html: category.icon }} />;
+  } else if (
+    category.icon.startsWith("https://") &&
+    category.icon.endsWith(".png")
+  ) {
+    icon = (
+      <img src={category.icon} alt={category.name} width={16} height={16} />
+    );
   }
 
   return (
     <Checkbox className={classNames.join(" ")} style={style}>
       <Flex align="center" gap={8}>
-        { icon }
-        <span>{ category.name }</span>
+        {icon}
+        <span>{category.name}</span>
       </Flex>
     </Checkbox>
   );
 };
+
+type Page = PagedResponse<Mod>["page"];
 
 const Mods = () => {
   const [source, setSource] = useState<Source>(Source.CurseForge);
@@ -73,6 +85,12 @@ const Mods = () => {
   const [pageIndex, setPageIndex] = useState(1);
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [results, setResults] = useState<Mod[]>([]);
+  const [page, setPage] = useState<Page>({
+    index: 0,
+    size: 0,
+    total: 0,
+  });
 
   const sortRuleOptions: SelectProps<SortRule>["options"] = [
     {
@@ -130,12 +148,10 @@ const Mods = () => {
     "1.21.1",
   ]);
 
-  const gameVersionOptions: SelectProps["options"] = gameVersions.map(
-    (v) => ({
-      value: v,
-      label: `Minecraft ${v}`,
-    }),
-  );
+  const gameVersionOptions: SelectProps["options"] = gameVersions.map((v) => ({
+    value: v,
+    label: `Minecraft ${v}`,
+  }));
 
   const modLoaderOptions: CheckboxGroupProps<ModLoader>["options"] = [
     {
@@ -186,17 +202,25 @@ const Mods = () => {
         //     <span style={{ userSelect: "none" }}>{c.name}</span>
         //   </Flex>
         // </Checkbox>
-        <CategoryCheckbox key={c.id} category={c} />
+        <CategoryCheckbox key={c.id} category={c} />,
       );
       const children = c.children ?? [];
       children.forEach((cc) => {
         options.push(
-          <CategoryCheckbox key={cc.id} category={cc} style={{ marginLeft: 12 }} />
+          <CategoryCheckbox
+            key={cc.id}
+            category={cc}
+            style={{ marginLeft: 12 }}
+          />,
         );
       });
     });
     return options;
   }, [categories]);
+
+  const modCards = useMemo(() => {
+    return results.map((mod) => <ModCard key={`${mod.id}`} mod={mod} />);
+  }, [results]);
 
   useEffect(() => {
     console.info("模组源切换到：", SourceNames[source]);
@@ -204,9 +228,12 @@ const Mods = () => {
       curseforge.getCategories().then((cats) => {
         console.info("从CurseForge获取到分类：", cats);
         setCategories(cats);
+        setCategoryIds([]);
       });
     } else if (source === Source.Modrinth) {
       // modrinth.getCategories()
+      setCategories([]);
+      setCategoryIds([]);
     }
   }, [source]);
 
@@ -221,6 +248,22 @@ const Mods = () => {
       ascend,
       pageSize,
       pageIndex,
+    });
+    const conditions = {
+      source,
+      sortRule,
+      pageSize,
+      pageIndex,
+      gameVersion,
+      modLoaders,
+      categoryIds,
+      keyword,
+      ascend,
+    } satisfies SearchModsConditions;
+    curseforge.searchMods(conditions).then((resp) => {
+      const { data: mods, page } = resp;
+      setResults(mods);
+      setPage(page);
     });
   }, [
     source,
@@ -330,9 +373,14 @@ const Mods = () => {
               value={pageSize}
               onChange={(value) => setPageSize(value)}
             />
-            <Pagination />
+            <Pagination
+              pageSize={pageSize}
+              current={pageIndex}
+              total={page.total / pageSize}
+            />
           </div>
         </div>
+        {modCards}
       </div>
     </div>
   );

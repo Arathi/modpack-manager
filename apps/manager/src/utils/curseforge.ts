@@ -1,15 +1,6 @@
-import type {
-  Category,
-  Mod,
-  File,
-  Version,
-  Source,
-} from "@amcs/core";
+import type { Category, Mod, File, Version, Source } from "@amcs/core";
 
-import {
-  SortRule,
-  ModLoader,
-} from "@amcs/core";
+import { SortRule, ModLoader } from "@amcs/core";
 
 import {
   Client,
@@ -19,10 +10,11 @@ import {
   type SearchModsParameters,
 } from "@amcs/curseforge-api";
 import axios, { type AxiosProxyConfig } from "axios";
+import type { PagedResponse } from "./commons";
 
 type CategoryID = Category["id"];
 
-const SLUG_PATTERN = /^@([a-z][0-9a-z_\-]*[0-9a-z])$/
+const SLUG_PATTERN = /^@([a-z][0-9a-z_\-]*[0-9a-z])$/;
 
 class ClientImpl extends Client {
   async request<REQ, RES>(
@@ -53,7 +45,7 @@ class ClientImpl extends Client {
   }
 }
 
-interface SearchModsConditions {
+export interface SearchModsConditions {
   source: Source;
   sortRule: SortRule;
   pageSize: number;
@@ -128,8 +120,15 @@ class CurseForgeAdapter {
     return categories;
   }
 
-  async searchMods(conditions: SearchModsConditions): Promise<Mod[]> {
-    const { keyword, categoryIds: inputCategoryIds = [], sortRule, modLoaders = [] } = conditions;
+  async searchMods(
+    conditions: SearchModsConditions,
+  ): Promise<PagedResponse<Mod>> {
+    const {
+      keyword,
+      categoryIds: inputCategoryIds = [],
+      sortRule,
+      modLoaders = [],
+    } = conditions;
     let slug: string | undefined;
     if (keyword !== undefined) {
       const matches = SLUG_PATTERN.exec(keyword);
@@ -141,19 +140,21 @@ class CurseForgeAdapter {
 
     const categoryIds: number[] = [];
     for (const id of inputCategoryIds) {
-      if (typeof id === 'number') {
+      if (typeof id === "number") {
         categoryIds.push(id);
       }
     }
 
-    let sortField: SearchModsParameters['sortField'] = undefined;
+    let sortField: SearchModsParameters["sortField"];
     switch (sortRule) {
       case SortRule.Relevancy:
         sortField = 1;
         break;
     }
 
-    const sortOrder: SearchModsParameters['sortOrder'] = conditions.ascend ? "asc" : "desc";
+    const sortOrder: SearchModsParameters["sortOrder"] = conditions.ascend
+      ? "asc"
+      : "desc";
 
     const modLoaderTypes: ModLoaderType[] = [];
     for (const loader of modLoaders) {
@@ -173,28 +174,49 @@ class CurseForgeAdapter {
       }
     }
 
-    const params = {
-      gameId: GAME_ID_MINECRAFT,
-      classId: CLASS_ID_MC_MODS,
-      categoryIds,
-      gameVersion: conditions.gameVersion,
-      searchFilter: conditions.keyword,
-      sortField,
-      sortOrder,
-      modLoaderTypes,
-      slug,
-      index: conditions.pageIndex,
-      pageSize: conditions.pageSize,
-    } satisfies SearchModsParameters;
-
-    const resp = await this.client.searchMods(params);
+    const { data: respData, pagination: respPage } =
+      await this.client.searchMods({
+        gameId: GAME_ID_MINECRAFT,
+        classId: CLASS_ID_MC_MODS,
+        categoryIds,
+        gameVersion: conditions.gameVersion,
+        searchFilter: conditions.keyword,
+        sortField,
+        sortOrder,
+        modLoaderTypes,
+        slug,
+        index: conditions.pageIndex,
+        pageSize: conditions.pageSize,
+      });
     const mods: Mod[] = [];
-    for (const mod of resp.data) {
+    for (const mod of respData) {
+      const categories: Category[] = mod.categories.map((c) => ({
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        icon: c.iconUrl,
+      }));
       mods.push({
         id: mod.id,
+        name: mod.name,
+        slug: mod.slug,
+        author: mod.authors[0].name,
+        logo: mod.logo.url,
+        description: mod.summary,
+        downloads: mod.downloadCount,
+        categories,
+        releasedAt: 0,
+        updatedAt: 0,
       } satisfies Mod);
     }
-    return mods;
+    return {
+      data: mods,
+      page: {
+        index: Math.floor(respPage.index / respPage.pageSize) + 1,
+        size: respPage.pageSize,
+        total: respPage.totalCount,
+      },
+    };
   }
 
   async getVersions(conditions: GetVersionsConditions): Promise<Version[]> {
