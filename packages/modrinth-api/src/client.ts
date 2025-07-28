@@ -4,7 +4,7 @@ type SearchProjectsParameters = {
   index?: Index;
   offset?: number;
   limit?: number;
-}
+};
 
 type Facet = "";
 
@@ -17,7 +17,7 @@ enum Index {
 }
 
 interface SearchResultResponse<D = object> {
-  hits: Array<D>,
+  hits: Array<D>;
   offset: number;
   limit: number;
   total_hits: number;
@@ -103,7 +103,7 @@ interface License {
   id: string;
   name: string;
   url: string | null;
-};
+}
 
 enum ModLoader {
   Forge = "forge",
@@ -136,14 +136,39 @@ enum RequireType {
 }
 
 export abstract class Client {
-  async searchProjects(params: SearchProjectsParameters): Promise<SearchResultResponse<ProjectSearchResult>> {
-    
+  baseURL: string = "https://api.modrinth.com/v2";
+
+  async searchProjects(
+    params: SearchProjectsParameters,
+  ): Promise<SearchResultResponse<ProjectSearchResult>> {
+    const path = "/search";
     return {
       hits: [],
       offset: 0,
       limit: 0,
       total_hits: 0,
     };
+  }
+
+  async getProject(id: string) {
+    const path = `/project/${id}`;
+  }
+
+  async listVersions(
+    id: string,
+    loaders?: ModLoader[],
+    gameVersions?: string[],
+    featured?: boolean,
+  ) {
+    const path = `/project/${id}/version`;
+  }
+
+  async getVersion(id: string) {
+    const path = `/version/${id}`;
+  }
+
+  async get(path: string) {
+    const url = `${this.baseURL}`;
   }
 
   abstract request<RES>(url: string): Promise<RES>;
