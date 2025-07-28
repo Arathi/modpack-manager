@@ -7,6 +7,7 @@ import {
   GAME_ID_MINECRAFT,
   CLASS_ID_MC_MODS,
   ModLoaderType,
+  ModsSearchSortField,
   type SearchModsParameters,
 } from "@amcs/curseforge-api";
 import axios, { type AxiosProxyConfig } from "axios";
@@ -54,12 +55,13 @@ export interface SearchModsConditions {
   modLoaders?: ModLoader[];
   categoryIds?: CategoryID[];
   keyword?: string;
-  ascend?: boolean;
 }
 
 interface GetVersionsConditions {
   source: Source;
 }
+
+type SortField = SearchModsParameters['sortField'];
 
 class CurseForgeAdapter {
   client: Client;
@@ -128,6 +130,8 @@ class CurseForgeAdapter {
       categoryIds: inputCategoryIds = [],
       sortRule,
       modLoaders = [],
+      pageIndex = 1,
+      pageSize = 50,
     } = conditions;
     let slug: string | undefined;
     if (keyword !== undefined) {
@@ -145,16 +149,24 @@ class CurseForgeAdapter {
       }
     }
 
-    let sortField: SearchModsParameters["sortField"];
+    let sortField: ModsSearchSortField;
     switch (sortRule) {
       case SortRule.Relevancy:
-        sortField = 1;
+        sortField = ModsSearchSortField.Featured;
+        break;
+      case SortRule.Popularity:
+        sortField = ModsSearchSortField.Popularity;
+        break;
+      case SortRule.Downloads:
+        sortField = ModsSearchSortField.TotalDownloads;
+        break;
+      case SortRule.Created:
+        sortField = ModsSearchSortField.ReleasedDate;
+        break;
+      case SortRule.Updated:
+        sortField = ModsSearchSortField.LastUpdated;
         break;
     }
-
-    const sortOrder: SearchModsParameters["sortOrder"] = conditions.ascend
-      ? "asc"
-      : "desc";
 
     const modLoaderTypes: ModLoaderType[] = [];
     for (const loader of modLoaders) {
@@ -174,36 +186,42 @@ class CurseForgeAdapter {
       }
     }
 
-    const { data: respData, pagination: respPage } =
-      await this.client.searchMods({
-        gameId: GAME_ID_MINECRAFT,
-        classId: CLASS_ID_MC_MODS,
-        categoryIds,
-        gameVersion: conditions.gameVersion,
-        searchFilter: conditions.keyword,
-        sortField,
-        sortOrder,
-        modLoaderTypes,
-        slug,
-        index: conditions.pageIndex,
-        pageSize: conditions.pageSize,
-      });
+    const index: SearchModsParameters['index'] = (pageIndex - 1) * pageSize;
+
+    const params = {
+      gameId: GAME_ID_MINECRAFT,
+      classId: CLASS_ID_MC_MODS,
+      categoryIds,
+      gameVersion: conditions.gameVersion,
+      searchFilter: conditions.keyword,
+      sortField,
+      sortOrder: "desc",
+      modLoaderTypes,
+      slug,
+      index,
+      pageSize: conditions.pageSize,
+    } satisfies SearchModsParameters;
+
+    const resp = await this.client.searchMods(params);
+    console.info("搜索结果：", resp);
+
+    const { data: respData, pagination: respPage } = resp;
     const mods: Mod[] = [];
-    for (const mod of respData) {
-      const categories: Category[] = mod.categories.map((c) => ({
+    for (const d of respData) {
+      const categories: Category[] = d.categories.map((c) => ({
         id: c.id,
         slug: c.slug,
         name: c.name,
         icon: c.iconUrl,
       }));
       mods.push({
-        id: mod.id,
-        name: mod.name,
-        slug: mod.slug,
-        author: mod.authors[0].name,
-        logo: mod.logo.url,
-        description: mod.summary,
-        downloads: mod.downloadCount,
+        id: d.id,
+        name: d.name,
+        slug: d.slug,
+        author: d.authors[0].name,
+        logo: d.logo.url,
+        description: d.summary,
+        downloads: d.downloadCount,
         categories,
         releasedAt: 0,
         updatedAt: 0,

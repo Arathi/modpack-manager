@@ -70,8 +70,6 @@ const CategoryCheckbox: React.FC<{
   );
 };
 
-type Page = PagedResponse<Mod>["page"];
-
 const Mods = () => {
   const [source, setSource] = useState<Source>(Source.CurseForge);
   const [gameVersion, setGameVersion] = useState<string>();
@@ -80,17 +78,12 @@ const Mods = () => {
 
   const [keyword, setKeyword] = useState("");
   const [sortRule, setSortRule] = useState<SortRule>(SortRule.Relevancy);
-  const [ascend, setAscend] = useState(false);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [pageIndex, setPageIndex] = useState(1);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [results, setResults] = useState<Mod[]>([]);
-  const [page, setPage] = useState<Page>({
-    index: 0,
-    size: 0,
-    total: 0,
-  });
+  const [total, setTotal] = useState(0);
 
   const sortRuleOptions: SelectProps<SortRule>["options"] = [
     {
@@ -114,11 +107,6 @@ const Mods = () => {
       label: SortRuleNames[SortRule.Downloads],
     },
   ];
-
-  const sortOrderIcon = useMemo(
-    () => (ascend ? <ImSortAmountAsc /> : <ImSortAmountDesc />),
-    [ascend],
-  );
 
   const sourceOptions: SegmentedProps<Source>["options"] = [
     {
@@ -196,12 +184,6 @@ const Mods = () => {
     const options: React.ReactNode[] = [];
     categories.forEach((c) => {
       options.push(
-        // <Checkbox value={c.id}>
-        //   <Flex align="center" gap={8}>
-        //     <img src={c.icon} width={16} height={16} alt={`category ${c.id} icon`} />
-        //     <span style={{ userSelect: "none" }}>{c.name}</span>
-        //   </Flex>
-        // </Checkbox>
         <CategoryCheckbox key={c.id} category={c} />,
       );
       const children = c.children ?? [];
@@ -245,7 +227,6 @@ const Mods = () => {
       categoryIds,
       keyword,
       sortRule,
-      ascend,
       pageSize,
       pageIndex,
     });
@@ -258,12 +239,11 @@ const Mods = () => {
       modLoaders,
       categoryIds,
       keyword,
-      ascend,
     } satisfies SearchModsConditions;
     curseforge.searchMods(conditions).then((resp) => {
       const { data: mods, page } = resp;
       setResults(mods);
-      setPage(page);
+      setTotal(page.total);
     });
   }, [
     source,
@@ -272,7 +252,6 @@ const Mods = () => {
     categoryIds,
     keyword,
     sortRule,
-    ascend,
     pageSize,
     pageIndex,
   ]);
@@ -352,31 +331,13 @@ const Mods = () => {
             style={{ width: 128 }}
             onChange={(value) => setSortRule(value)}
           />
-          <Button icon={sortOrderIcon} onClick={() => setAscend(!ascend)} />
           <div className="remains">
-            <span>每页数量：</span>
-            <Select
-              options={[
-                {
-                  value: 10,
-                  label: "10",
-                },
-                {
-                  value: 20,
-                  label: "20",
-                },
-                {
-                  value: 50,
-                  label: "50",
-                },
-              ]}
-              value={pageSize}
-              onChange={(value) => setPageSize(value)}
-            />
             <Pagination
-              pageSize={pageSize}
               current={pageIndex}
-              total={page.total / pageSize}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 20, 50]}
+              hideOnSinglePage={true}
+              total={Math.ceil(total / pageSize)}
             />
           </div>
         </div>

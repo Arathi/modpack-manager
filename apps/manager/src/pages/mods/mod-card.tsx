@@ -1,6 +1,6 @@
-import { Button, Flex } from "antd";
 import type { Category, Mod } from "@amcs/core";
 import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Flex } from "antd";
 import { useState } from "react";
 
 interface Props {
