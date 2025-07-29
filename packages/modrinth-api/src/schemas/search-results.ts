@@ -28,3 +28,5 @@ export interface Project {
   featured_gallery: string | null;
   color: number;
 }
+
+export type ProjectSearchResult = SearchResult<Project>;

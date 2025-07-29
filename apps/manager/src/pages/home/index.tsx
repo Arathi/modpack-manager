@@ -1,17 +1,19 @@
 import { Button, Flex } from "antd";
-import { MdLogin } from "react-icons/md";
-import { NavLink, Outlet, useNavigate, useNavigation } from "react-router";
-import { BsBox, BsBoxes } from "react-icons/bs";
 import { useEffect } from "react";
+import { BsBox, BsBoxes } from "react-icons/bs";
+import { MdLogin } from "react-icons/md";
+import { NavLink, Outlet } from "react-router";
 
-import { Settings } from "./settings";
 import { init } from "@/store";
+import { adapter as curseforge } from "@/utils/curseforge";
+import { Settings } from "./settings";
 
 import "./index.less";
 
 const Home = () => {
   useEffect(() => {
     init();
+    // curseforge.getVersions();
   }, []);
 
   return (
@@ -23,14 +25,14 @@ const Home = () => {
         </div>
         <div className="links">
           <NavLink
-            className={({isActive}) => isActive ? "active" : ""}
+            className={({ isActive }) => (isActive ? "active" : "")}
             to="/mods"
           >
             <BsBox />
             <span>Mods</span>
           </NavLink>
           <NavLink
-            className={({isActive}) => isActive ? "active" : ""}
+            className={({ isActive }) => (isActive ? "active" : "")}
             to="/modpacks"
           >
             <BsBoxes />

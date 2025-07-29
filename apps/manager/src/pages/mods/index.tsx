@@ -7,7 +7,6 @@ import {
   SourceNames,
 } from "@amcs/core";
 import {
-  Button,
   Checkbox,
   Collapse,
   Flex,
@@ -20,13 +19,12 @@ import {
   type SegmentedProps,
 } from "antd";
 import { useEffect, useMemo, useState } from "react";
-import { ImSortAmountAsc, ImSortAmountDesc } from "react-icons/im";
 
 import {
   adapter as curseforge,
+  type MinecraftVersionGroup,
   type SearchModsConditions,
 } from "@/utils/curseforge";
-import type { PagedResponse } from "@/utils/commons";
 import { ModCard } from "./mod-card";
 
 import CurseForgeLogo from "@/assets/curseforge.svg?react";
@@ -43,9 +41,10 @@ type CategoryID = Category["id"];
 
 const CategoryCheckbox: React.FC<{
   category: Category;
+  level?: number;
   className?: string;
   style?: GetProps<typeof Checkbox>["style"];
-}> = ({ category, className, style }) => {
+}> = ({ category, className, level = 0, style }) => {
   const classNames = ["category-checkbox", className];
   let icon: React.ReactNode;
   if (category.icon.startsWith("<svg") && category.icon.endsWith("</svg>")) {
@@ -61,7 +60,13 @@ const CategoryCheckbox: React.FC<{
   }
 
   return (
-    <Checkbox className={classNames.join(" ")} style={style}>
+    <Checkbox
+      className={classNames.join(" ")}
+      style={{
+        ...style,
+        paddingLeft: level * 12,
+      }}
+    >
       <Flex align="center" gap={8}>
         {icon}
         <span>{category.name}</span>
@@ -84,6 +89,16 @@ const Mods = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [results, setResults] = useState<Mod[]>([]);
   const [total, setTotal] = useState(0);
+
+  const [gameVersionGroups, setGameVersionGroups] = useState<
+    Array<MinecraftVersionGroup>
+  >([]);
+
+  useEffect(() => {
+    curseforge.getGameVersions().then((groups) => {
+      setGameVersionGroups(groups);
+    });
+  }, []);
 
   const sortRuleOptions: SelectProps<SortRule>["options"] = [
     {
@@ -129,17 +144,18 @@ const Mods = () => {
     },
   ];
 
-  const [gameVersions, setGameVersions] = useState<string[]>([
-    "1.21.8",
-    "1.21.6",
-    "1.21.5",
-    "1.21.1",
-  ]);
-
-  const gameVersionOptions: SelectProps["options"] = gameVersions.map((v) => ({
-    value: v,
-    label: `Minecraft ${v}`,
-  }));
+  const gameVersionOptions: SelectProps["options"] = useMemo(() => {
+    return gameVersionGroups.map((group) => {
+      return {
+        label: group.name,
+        title: group.name,
+        options: group.versions.map((version) => ({
+          label: version.name,
+          value: version.name,
+        })),
+      };
+    });
+  }, [gameVersionGroups]);
 
   const modLoaderOptions: CheckboxGroupProps<ModLoader>["options"] = [
     {
@@ -183,18 +199,10 @@ const Mods = () => {
   const categoryOptions = useMemo(() => {
     const options: React.ReactNode[] = [];
     categories.forEach((c) => {
-      options.push(
-        <CategoryCheckbox key={c.id} category={c} />,
-      );
+      options.push(<CategoryCheckbox key={c.id} category={c} level={0} />);
       const children = c.children ?? [];
       children.forEach((cc) => {
-        options.push(
-          <CategoryCheckbox
-            key={cc.id}
-            category={cc}
-            style={{ marginLeft: 12 }}
-          />,
-        );
+        options.push(<CategoryCheckbox key={cc.id} category={cc} level={1} />);
       });
     });
     return options;

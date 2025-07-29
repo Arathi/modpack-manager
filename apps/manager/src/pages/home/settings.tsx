@@ -1,5 +1,5 @@
 import { Button, Flex, Form, Input, Modal } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MdOutlineSettings } from "react-icons/md";
 import { useSnapshot } from "valtio";
 import store from "@/store";
@@ -39,4 +39,4 @@ export const Settings = () => {
       </Modal>
     </>
   );
-}
+};

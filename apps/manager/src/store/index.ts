@@ -1,11 +1,21 @@
-import { proxy } from "valtio";
+import { SortRule, Source } from "@amcs/core";
+import { proxy, ref } from "valtio";
+
+import type { SearchModsConditions } from "@/utils/curseforge";
 
 type Store = {
   curseForgeApiKey: string;
+  searchModsFilter: SearchModsConditions;
 };
 
 const store = proxy<Store>({
   curseForgeApiKey: "",
+  searchModsFilter: ref({
+    source: Source.CurseForge,
+    sortRule: SortRule.Downloads,
+    pageSize: 50,
+    pageIndex: 1,
+  }),
 });
 
 export function init() {

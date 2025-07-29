@@ -1,21 +1,16 @@
 import type {
   Category,
-  GameVersionsByType,
-  GameVersionType,
-  GameVersionsByTypeV2,
-  Mod,
-  File,
-} from "./schemas";
-import { ModLoaderType } from "./schemas";
-import {
-  GetModFilesParameters,
-  SearchModsParameters,
-} from "./schemas/parameters";
-import {
   DataResponse,
+  File,
+  GameVersionsByType,
+  GameVersionsByTypeV2,
+  GameVersionType,
+  GetModFilesParameters,
   ListResponse,
+  Mod,
   PaginationResponse,
-} from "./schemas/response";
+  SearchModsParameters,
+} from "./schemas";
 
 type SearchParams = Record<string, string | number | boolean | undefined>;
 
@@ -23,7 +18,6 @@ const BASE_URL = "https://api.curseforge.com";
 const DEFAULT_PAGE_SIZE = 50;
 const DEFAULT_INDEX = 0;
 const GET = "GET";
-const POST = "POST";
 
 export const GAME_ID_MINECRAFT = 432;
 export const CLASS_ID_MC_MODS = 6;
@@ -138,8 +132,7 @@ export abstract class Client {
 
     // modLoaderType / modLoaderTypes
     if (modLoaderTypeList !== undefined && modLoaderTypeList.length > 0) {
-      const names = modLoaderTypeList.map((mlt) => ModLoaderType[mlt]);
-      params.modLoaderTypes = `[${names.join(",")}]`;
+      params.modLoaderTypes = `[${modLoaderTypeList.join(",")}]`;
     } else if (modLoaderType !== undefined) {
       params.modLoaderType = modLoaderType;
     }
@@ -174,7 +167,7 @@ export abstract class Client {
       gameVersionTypeId,
       index,
       pageSize,
-    };
+    } satisfies SearchParams;
     return this.get(path, params);
   }
 
@@ -191,12 +184,6 @@ export abstract class Client {
     const url = builder.toString();
     console.info(`GET ${url}`);
     return this.request(GET, url);
-  }
-
-  post<REQ, RES>(path: string, data: REQ): Promise<RES> {
-    const url = `${this.baseURL}${path}`;
-    console.info(`POST ${url} `, data);
-    return this.request(POST, url, data);
   }
 
   abstract request<REQ, RES>(

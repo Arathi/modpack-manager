@@ -1,7 +1,5 @@
 import type { Category, Mod, File, Version, Source } from "@amcs/core";
-
 import { SortRule, ModLoader } from "@amcs/core";
-
 import {
   Client,
   GAME_ID_MINECRAFT,
@@ -11,11 +9,37 @@ import {
   type SearchModsParameters,
 } from "@amcs/curseforge-api";
 import axios, { type AxiosProxyConfig } from "axios";
+import semver, { SemVer } from "semver";
+
 import type { PagedResponse } from "./commons";
 
 type CategoryID = Category["id"];
 
 const SLUG_PATTERN = /^@([a-z][0-9a-z_\-]*[0-9a-z])$/;
+const MINECRAFT_VERSION_REGEX = /^(\d+\.\d+)(\.\d+)?$/;
+
+export interface MinecraftVersionGroup {
+  name: string;
+  type: number;
+  semver: string;
+  versions: MinecraftVersion[];
+}
+
+export interface MinecraftVersion {
+  name: string;
+  semver: string;
+}
+
+function toSemantic(version: string): string | null {
+  const matches = MINECRAFT_VERSION_REGEX.exec(version);
+  if (matches === null) {
+    console.warn("无效的Minecraft版本：", version);
+    return null;
+  }
+
+  const [_, major, dotMinor = ".0"] = matches;
+  return `${major}${dotMinor}`;
+}
 
 class ClientImpl extends Client {
   async request<REQ, RES>(
@@ -61,8 +85,6 @@ interface GetVersionsConditions {
   source: Source;
 }
 
-type SortField = SearchModsParameters['sortField'];
-
 class CurseForgeAdapter {
   client: Client;
 
@@ -71,6 +93,60 @@ class CurseForgeAdapter {
     this.client = new ClientImpl({
       apiKey,
     });
+  }
+
+  async getGameVersions(): Promise<MinecraftVersionGroup[]> {
+    const vtResp = await this.client.getVersionTypes(GAME_ID_MINECRAFT);
+    const groupNames: Record<number, string> = {};
+    for (const vt of vtResp.data) {
+      if (vt.slug.startsWith("minecraft-1-")) {
+        groupNames[vt.id] = vt.name;
+      }
+    }
+
+    const gvResp = await this.client.getVersions(GAME_ID_MINECRAFT);
+    const groups: MinecraftVersionGroup[] = [];
+    for (const gv of gvResp.data) {
+      const groupName = groupNames[gv.type];
+      if (groupName === undefined) {
+        console.info("不收录的版本类型：", gv.type);
+        continue;
+      }
+
+      const groupVersion = groupName.substring("Minecraft ".length);
+      const groupSemVer = toSemantic(groupVersion);
+      if (groupSemVer === null) {
+        console.info("分组版本号不符合规则：", groupVersion);
+        continue;
+      }
+
+      const versions: MinecraftVersion[] = [];
+      console.info(`分组 ${groupName} 的版本：`, gv.versions);
+      for (const mcv of gv.versions) {
+        const mcsv = toSemantic(mcv);
+        if (mcsv === null) {
+          continue;
+        }
+        versions.push({
+          name: mcv,
+          semver: mcsv,
+        });
+      }
+
+      versions.sort((v1, v2) => semver.rcompare(v1.semver, v2.semver));
+
+      groups.push({
+        type: gv.type,
+        name: groupName,
+        semver: groupSemVer,
+        versions,
+      });
+    }
+
+    groups.sort((g1, g2) => semver.rcompare(g1.semver, g2.semver));
+
+    console.info("获取Minecraft版本分组如下：", groups);
+    return groups;
   }
 
   async getCategories(): Promise<Category[]> {
@@ -186,7 +262,7 @@ class CurseForgeAdapter {
       }
     }
 
-    const index: SearchModsParameters['index'] = (pageIndex - 1) * pageSize;
+    const index: SearchModsParameters["index"] = (pageIndex - 1) * pageSize;
 
     const params = {
       gameId: GAME_ID_MINECRAFT,
