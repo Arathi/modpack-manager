@@ -5,7 +5,7 @@ import { MdLogin } from "react-icons/md";
 import { NavLink, Outlet } from "react-router";
 
 import { init } from "@/store";
-import { adapter as curseforge } from "@/utils/curseforge";
+import { init as initSiteState } from "@/store/site";
 import { Settings } from "./settings";
 
 import "./index.less";
@@ -13,7 +13,7 @@ import "./index.less";
 const Home = () => {
   useEffect(() => {
     init();
-    // curseforge.getVersions();
+    initSiteState();
   }, []);
 
   return (

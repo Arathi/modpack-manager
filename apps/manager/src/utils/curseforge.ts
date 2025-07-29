@@ -12,6 +12,7 @@ import axios, { type AxiosProxyConfig } from "axios";
 import semver, { SemVer } from "semver";
 
 import type { PagedResponse } from "./commons";
+import type { SearchModsFilter } from "@/domains/search-mods-filter";
 
 type CategoryID = Category["id"];
 
@@ -68,17 +69,6 @@ class ClientImpl extends Client {
 
     return resp.data;
   }
-}
-
-export interface SearchModsConditions {
-  source: Source;
-  sortRule: SortRule;
-  pageSize: number;
-  pageIndex: number;
-  gameVersion?: string;
-  modLoaders?: ModLoader[];
-  categoryIds?: CategoryID[];
-  keyword?: string;
 }
 
 interface GetVersionsConditions {
@@ -199,7 +189,7 @@ class CurseForgeAdapter {
   }
 
   async searchMods(
-    conditions: SearchModsConditions,
+    filter: Readonly<SearchModsFilter>,
   ): Promise<PagedResponse<Mod>> {
     const {
       keyword,
@@ -208,7 +198,7 @@ class CurseForgeAdapter {
       modLoaders = [],
       pageIndex = 1,
       pageSize = 50,
-    } = conditions;
+    } = filter;
     let slug: string | undefined;
     if (keyword !== undefined) {
       const matches = SLUG_PATTERN.exec(keyword);
@@ -225,11 +215,8 @@ class CurseForgeAdapter {
       }
     }
 
-    let sortField: ModsSearchSortField;
+    let sortField: ModsSearchSortField | undefined;
     switch (sortRule) {
-      case SortRule.Relevancy:
-        sortField = ModsSearchSortField.Featured;
-        break;
       case SortRule.Popularity:
         sortField = ModsSearchSortField.Popularity;
         break;
@@ -241,6 +228,24 @@ class CurseForgeAdapter {
         break;
       case SortRule.Updated:
         sortField = ModsSearchSortField.LastUpdated;
+        break;
+      case SortRule.Featured:
+        sortField = ModsSearchSortField.Featured;
+        break;
+      case SortRule.Name:
+        sortField = ModsSearchSortField.Name;
+        break;
+      case SortRule.Author:
+        sortField = ModsSearchSortField.Author;
+        break;
+      case SortRule.Category:
+        sortField = ModsSearchSortField.Category;
+        break;
+      case SortRule.GameVersion:
+        sortField = ModsSearchSortField.GameVersion;
+        break;
+      case SortRule.Rating:
+        sortField = ModsSearchSortField.Rating;
         break;
     }
 
@@ -268,14 +273,14 @@ class CurseForgeAdapter {
       gameId: GAME_ID_MINECRAFT,
       classId: CLASS_ID_MC_MODS,
       categoryIds,
-      gameVersion: conditions.gameVersion,
-      searchFilter: conditions.keyword,
+      gameVersion: filter.gameVersion,
+      searchFilter: filter.keyword,
       sortField,
       sortOrder: "desc",
       modLoaderTypes,
       slug,
       index,
-      pageSize: conditions.pageSize,
+      pageSize: filter.pageSize,
     } satisfies SearchModsParameters;
 
     const resp = await this.client.searchMods(params);

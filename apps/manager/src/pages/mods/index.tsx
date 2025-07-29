@@ -19,12 +19,16 @@ import {
   type SegmentedProps,
 } from "antd";
 import { useEffect, useMemo, useState } from "react";
+import { ref, useSnapshot } from "valtio";
+import { watch } from "valtio/utils";
 
 import {
   adapter as curseforge,
   type MinecraftVersionGroup,
-  type SearchModsConditions,
 } from "@/utils/curseforge";
+import type { SearchModsFilter } from "@/domains/search-mods-filter";
+import filterState from "@/store/search-mods-filter";
+import siteState from "@/store/site";
 import { ModCard } from "./mod-card";
 
 import CurseForgeLogo from "@/assets/curseforge.svg?react";
@@ -62,6 +66,7 @@ const CategoryCheckbox: React.FC<{
   return (
     <Checkbox
       className={classNames.join(" ")}
+      value={category.id}
       style={{
         ...style,
         paddingLeft: level * 12,
@@ -76,53 +81,22 @@ const CategoryCheckbox: React.FC<{
 };
 
 const Mods = () => {
-  const [source, setSource] = useState<Source>(Source.CurseForge);
-  const [gameVersion, setGameVersion] = useState<string>();
-  const [modLoaders, setModLoaders] = useState<ModLoader[]>([]);
-  const [categoryIds, setCategoryIds] = useState<CategoryID[]>([]);
+  const siteSnap = useSnapshot(siteState);
+  const filterSnap = useSnapshot(filterState);
 
-  const [keyword, setKeyword] = useState("");
-  const [sortRule, setSortRule] = useState<SortRule>(SortRule.Relevancy);
-  const [pageSize, setPageSize] = useState(50);
-  const [pageIndex, setPageIndex] = useState(1);
-
-  const [categories, setCategories] = useState<Category[]>([]);
   const [results, setResults] = useState<Mod[]>([]);
   const [total, setTotal] = useState(0);
 
-  const [gameVersionGroups, setGameVersionGroups] = useState<
-    Array<MinecraftVersionGroup>
-  >([]);
+  const source = filterSnap.source;
+  const inCurseForge = source === Source.CurseForge;
+  const inModrinth = source === Source.Modrinth;
+  const categories =
+    source === Source.CurseForge
+      ? siteSnap.curseforgeCategories
+      : siteSnap.modrinthCategories;
 
-  useEffect(() => {
-    curseforge.getGameVersions().then((groups) => {
-      setGameVersionGroups(groups);
-    });
-  }, []);
-
-  const sortRuleOptions: SelectProps<SortRule>["options"] = [
-    {
-      value: SortRule.Relevancy,
-      label: SortRuleNames[SortRule.Relevancy],
-    },
-    {
-      value: SortRule.Popularity,
-      label: SortRuleNames[SortRule.Popularity],
-    },
-    {
-      value: SortRule.Updated,
-      label: SortRuleNames[SortRule.Updated],
-    },
-    {
-      value: SortRule.Created,
-      label: SortRuleNames[SortRule.Created],
-    },
-    {
-      value: SortRule.Downloads,
-      label: SortRuleNames[SortRule.Downloads],
-    },
-  ];
-
+  // #region 选项
+  // 源
   const sourceOptions: SegmentedProps<Source>["options"] = [
     {
       value: Source.CurseForge,
@@ -144,8 +118,9 @@ const Mods = () => {
     },
   ];
 
-  const gameVersionOptions: SelectProps["options"] = useMemo(() => {
-    return gameVersionGroups.map((group) => {
+  // Minecraft版本
+  const gameVersionOptions: SelectProps<string>["options"] =
+    siteSnap.versionGroups.map((group) => {
       return {
         label: group.name,
         title: group.name,
@@ -155,8 +130,8 @@ const Mods = () => {
         })),
       };
     });
-  }, [gameVersionGroups]);
 
+  // ModLoader
   const modLoaderOptions: CheckboxGroupProps<ModLoader>["options"] = [
     {
       value: ModLoader.Forge,
@@ -196,73 +171,152 @@ const Mods = () => {
     },
   ];
 
-  const categoryOptions = useMemo(() => {
-    const options: React.ReactNode[] = [];
-    categories.forEach((c) => {
-      options.push(<CategoryCheckbox key={c.id} category={c} level={0} />);
-      const children = c.children ?? [];
-      children.forEach((cc) => {
-        options.push(<CategoryCheckbox key={cc.id} category={cc} level={1} />);
-      });
-    });
-    return options;
-  }, [categories]);
+  // 分类
+  const categoryOptions: React.ReactNode[] = [];
+  function addCategoryOptions(categories: Category[] = [], level: number = 0) {
+    // categories.map((cat) => {
+    //   return (
+    //     <CategoryCheckbox key={cat.id} category={cat as Category} level={0} />
+    //   );
+    // });
+    for (const category of categories) {
+      categoryOptions.push(
+        <CategoryCheckbox
+          key={category.id}
+          category={category}
+          level={level}
+        />,
+      );
+      if (category.children !== undefined && category.children.length > 0) {
+        addCategoryOptions(category.children, level + 1);
+      }
+    }
+  }
+  addCategoryOptions(categories as Category[]);
+
+  // 排序规则
+  const sortRuleOptions = [
+    {
+      value: SortRule.Popularity,
+      label: SortRuleNames[SortRule.Popularity],
+    },
+    {
+      value: SortRule.Updated,
+      label: SortRuleNames[SortRule.Updated],
+    },
+    {
+      value: SortRule.Created,
+      label: SortRuleNames[SortRule.Created],
+    },
+    {
+      value: SortRule.Downloads,
+      label: SortRuleNames[SortRule.Downloads],
+    },
+    // 仅限CurseForge
+    {
+      value: SortRule.Featured,
+      label: SortRuleNames[SortRule.Featured],
+      disabled: inModrinth,
+    },
+    {
+      value: SortRule.Name,
+      label: SortRuleNames[SortRule.Name],
+      disabled: inModrinth,
+    },
+    {
+      value: SortRule.Author,
+      label: SortRuleNames[SortRule.Author],
+      disabled: inModrinth,
+    },
+    {
+      value: SortRule.Category,
+      label: SortRuleNames[SortRule.Category],
+      disabled: inModrinth,
+    },
+    {
+      value: SortRule.GameVersion,
+      label: SortRuleNames[SortRule.GameVersion],
+      disabled: inModrinth,
+    },
+    {
+      value: SortRule.Rating,
+      label: SortRuleNames[SortRule.Rating],
+      disabled: inModrinth,
+    },
+    // 仅限Modrinth
+    {
+      value: SortRule.Relevancy,
+      label: SortRuleNames[SortRule.Relevancy],
+      disabled: inCurseForge,
+    },
+  ] satisfies SelectProps<SortRule>["options"];
+  // #endregion
+
+  // const categoryOptions = useMemo(() => {
+  //   const options: React.ReactNode[] = [];
+  //   categories.forEach((c) => {
+  //     options.push(<CategoryCheckbox key={c.id} category={c} level={0} />);
+  //     const children = c.children ?? [];
+  //     children.forEach((cc) => {
+  //       options.push(<CategoryCheckbox key={cc.id} category={cc} level={1} />);
+  //     });
+  //   });
+  //   return options;
+  // }, [categories]);
 
   const modCards = useMemo(() => {
     return results.map((mod) => <ModCard key={`${mod.id}`} mod={mod} />);
   }, [results]);
 
-  useEffect(() => {
-    console.info("模组源切换到：", SourceNames[source]);
-    if (source === Source.CurseForge) {
-      curseforge.getCategories().then((cats) => {
-        console.info("从CurseForge获取到分类：", cats);
-        setCategories(cats);
-        setCategoryIds([]);
-      });
-    } else if (source === Source.Modrinth) {
-      // modrinth.getCategories()
-      setCategories([]);
-      setCategoryIds([]);
-    }
-  }, [source]);
+  // useEffect(() => {
+  //   console.info("模组源切换到：", SourceNames[source]);
+  //   if (source === Source.CurseForge) {
+  //     curseforge.getCategories().then((cats) => {
+  //       console.info("从CurseForge获取到分类：", cats);
+  //       setCategories(cats);
+  //       setCategoryIds([]);
+  //     });
+  //   } else if (source === Source.Modrinth) {
+  //     // modrinth.getCategories()
+  //     setCategories([]);
+  //     setCategoryIds([]);
+  //   }
+  // }, [source]);
 
-  useEffect(() => {
-    console.info("搜索条件发生变化：", {
-      source,
-      gameVersion,
-      modLoaders,
-      categoryIds,
-      keyword,
-      sortRule,
-      pageSize,
-      pageIndex,
-    });
-    const conditions = {
-      source,
-      sortRule,
-      pageSize,
-      pageIndex,
-      gameVersion,
-      modLoaders,
-      categoryIds,
-      keyword,
-    } satisfies SearchModsConditions;
-    curseforge.searchMods(conditions).then((resp) => {
-      const { data: mods, page } = resp;
-      setResults(mods);
-      setTotal(page.total);
-    });
-  }, [
-    source,
-    gameVersion,
-    modLoaders,
-    categoryIds,
-    keyword,
-    sortRule,
-    pageSize,
-    pageIndex,
-  ]);
+  // useEffect(() => {
+  //   console.info("搜索条件发生变化：", filterSnap);
+  //   // const {
+  //   //   source,
+  //   //   sortRule,
+  //   //   pageIndex,
+  //   //   pageSize,
+  //   //   gameVersion,
+  //   //   modLoaders = [],
+  //   //   categoryIds = [],
+  //   //   keyword,
+  //   // } = filterSnap;
+  //   // const filter = {
+  //   //   source,
+  //   //   sortRule,
+  //   //   pageSize,
+  //   //   pageIndex,
+  //   //   gameVersion,
+  //   //   modLoaders,
+  //   //   categoryIds,
+  //   //   keyword,
+  //   // } satisfies SearchModsFilter;
+  //   const filter = filterSnap as Readonly<SearchModsFilter>;
+  //   curseforge.searchMods(filter).then((resp) => {
+  //     const { data: mods, page } = resp;
+  //     setResults(mods);
+  //     setTotal(page.total);
+  //   });
+  // }, []);
+
+  watch((get) => {
+    const filter = get(filterState);
+    console.info("模组搜索过滤器发生变化：", filter);
+  }, {});
 
   return (
     <div className="page mods">
@@ -270,7 +324,11 @@ const Mods = () => {
         <Segmented
           block
           options={sourceOptions}
-          onChange={(value) => setSource(value)}
+          value={filterSnap.source}
+          onChange={(value) => {
+            console.info("切换模组源到：", value);
+            filterState.source = value;
+          }}
         />
         <Collapse
           className="collapse"
@@ -279,11 +337,11 @@ const Mods = () => {
         >
           <Collapse.Panel header="Minecraft版本" key="minecraft-versions">
             <Select
-              value={gameVersion}
+              value={filterSnap.gameVersion}
               options={gameVersionOptions}
-              onChange={(version) => {
-                console.info("Minecraft版本过滤器发生变化：", version);
-                setGameVersion(version);
+              onChange={(value) => {
+                console.info("Minecraft版本过滤器发生变化：", value);
+                filterState.gameVersion = value;
               }}
               placeholder="请选择"
               style={{
@@ -301,9 +359,9 @@ const Mods = () => {
               }}
               onChange={(values) => {
                 console.info("模组加载器过滤器发生变化：", values);
-                setModLoaders(values);
+                filterState.modLoaders = values;
               }}
-              value={modLoaders}
+              value={filterSnap.modLoaders as ModLoader[]}
             />
           </Collapse.Panel>
           <Collapse.Panel header="分类" key="categories">
@@ -314,9 +372,9 @@ const Mods = () => {
               }}
               onChange={(values) => {
                 console.info("分类过滤器发生变化：", values);
-                setCategoryIds(values);
+                filterState.categoryIds = values;
               }}
-              value={categoryIds}
+              value={filterSnap.categoryIds as CategoryID[]}
             >
               {categoryOptions}
             </Checkbox.Group>
@@ -326,26 +384,33 @@ const Mods = () => {
       <div className="right">
         <Input
           placeholder="关键字"
-          value={keyword}
+          value={filterSnap.keyword}
           onChange={(event) => {
             const value = event.currentTarget.value;
-            setKeyword(value);
+            filterState.keyword = value;
           }}
         />
         <div className="row">
           <Select
-            value={sortRule}
+            value={filterSnap.sortRule}
             options={sortRuleOptions}
             style={{ width: 128 }}
-            onChange={(value) => setSortRule(value)}
+            onChange={(value) => {
+              console.info("排序规则发生变化：", value);
+              filterState.sortRule = value;
+            }}
           />
           <div className="remains">
             <Pagination
-              current={pageIndex}
-              pageSize={pageSize}
+              current={filterSnap.pageIndex}
+              pageSize={filterSnap.pageSize}
               pageSizeOptions={[10, 20, 50]}
               hideOnSinglePage={true}
-              total={Math.ceil(total / pageSize)}
+              total={Math.ceil(total / filterSnap.pageSize)}
+              onChange={(page, pageSize) => {
+                filterState.pageIndex = page;
+                filterState.pageSize = pageSize;
+              }}
             />
           </div>
         </div>
