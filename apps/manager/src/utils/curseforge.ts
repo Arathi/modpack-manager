@@ -1,6 +1,9 @@
 import type { Category, Mod, Version, Source } from "@amcs/core";
 import { SortRule, ModLoader } from "@amcs/core";
-import type { SearchModsParameters } from "@amcs/curseforge-api";
+import type {
+  SearchModsParameters,
+  GetModFilesParameters,
+} from "@amcs/curseforge-api";
 import {
   Client,
   GAME_ID_MINECRAFT,
@@ -10,9 +13,11 @@ import {
 } from "@amcs/curseforge-api";
 import axios, { type AxiosProxyConfig } from "axios";
 import semver from "semver";
+import dayjs from "dayjs";
 
 import type { SearchModsFilter } from "@/domains/search-mods-filter";
 import type { PagedResponse } from "./commons";
+import type { GetVersionsFilter } from "@/domains/get-versions-filter";
 
 const SLUG_PATTERN = /^@([a-z][0-9a-z_\-]*[0-9a-z])$/;
 const MINECRAFT_VERSION_REGEX = /^(\d+\.\d+)(\.\d+)?$/;
@@ -28,6 +33,26 @@ export interface MinecraftVersion {
   name: string;
   semver: string;
 }
+
+const modLoaderDict: Partial<Record<ModLoaderType, ModLoader>> = {
+  [ModLoaderType.Forge]: ModLoader.Forge,
+  [ModLoaderType.Fabric]: ModLoader.Fabric,
+  [ModLoaderType.Quilt]: ModLoader.Quilt,
+  [ModLoaderType.NeoForge]: ModLoader.NeoForge,
+};
+
+const modLoaderTypes: Record<ModLoader, ModLoaderType> = {
+  [ModLoader.Forge]: ModLoaderType.Forge,
+  [ModLoader.Fabric]: ModLoaderType.Fabric,
+  [ModLoader.Quilt]: ModLoaderType.Quilt,
+  [ModLoader.NeoForge]: ModLoaderType.NeoForge,
+};
+
+// const relations: Record<number, Relation> = {
+//   2: Relation.Required,
+//   3: Relation.Optional,
+//   4: Relation.Other,
+// };
 
 function toSemantic(version: string): string | null {
   const matches = MINECRAFT_VERSION_REGEX.exec(version);
@@ -316,8 +341,85 @@ class CurseForgeAdapter {
     };
   }
 
-  async getVersions(conditions: GetVersionsConditions): Promise<Version[]> {
-    return [];
+  async getVersions(
+    filter: GetVersionsFilter,
+  ): Promise<PagedResponse<Version>> {
+    const { modId, gameVersion, pageIndex = 1, pageSize = 50 } = filter;
+    let modLoaderType: ModLoaderType | undefined;
+    if (filter.modLoader !== undefined) {
+      modLoaderType = modLoaderTypes[filter.modLoader];
+    }
+
+    const params = {
+      gameVersion,
+      modLoaderType: modLoaderType,
+      index: (pageIndex - 1) * pageSize,
+      pageSize,
+    } satisfies GetModFilesParameters;
+
+    const { data, pagination } = await this.client.getModFiles(
+      modId as number,
+      params,
+    );
+
+    const versions = data.map((f) => {
+      const hash = f.hashes.find((h) => h.algo === 1);
+      const sha1 = hash?.value ?? "";
+      const publishedDay = dayjs();
+
+      const gameVersions: string[] = [];
+      const modLoaders: ModLoader[] = [];
+      for (const cfgv of f.gameVersions) {
+        switch (cfgv) {
+          case "Forge":
+            modLoaders.push(ModLoader.Forge);
+            break;
+          case "Fabric":
+            modLoaders.push(ModLoader.Fabric);
+            break;
+          case "Quilt":
+            modLoaders.push(ModLoader.Quilt);
+            break;
+          case "NeoForge":
+            modLoaders.push(ModLoader.NeoForge);
+            break;
+        }
+      }
+
+      // const dependencies: Version["dependencies"] = f.dependencies.map((dep) => {
+      //   let relation = [];
+      //   switch () {
+      //     case
+      //   }
+      //   return {
+      //     id: dep.modId,
+      //     relation,
+      //   };
+      // });
+
+      return {
+        id: f.id,
+        modId: f.modId,
+        fileName: f.fileName,
+        sha1,
+        publishedAt: publishedDay.unix(),
+        downloads: f.downloadCount,
+        fileSize: f.fileSizeOnDisk,
+        url: f.downloadUrl,
+        gameVersions,
+        modLoaders,
+        dependencies: [],
+      } satisfies Version;
+    });
+
+    return {
+      data: versions,
+      page: {
+        index: pagination.index,
+        size: pagination.pageSize,
+        total: pagination.totalCount,
+      },
+    };
   }
 }
 

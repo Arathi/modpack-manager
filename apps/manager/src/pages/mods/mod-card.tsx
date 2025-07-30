@@ -1,7 +1,7 @@
 import type { Category, Version, Mod, ModLoader } from "@amcs/core";
 import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Dropdown, Flex, Modal, Select } from "antd";
-import type { GetProps, MenuProps } from "antd";
+import type { GetProps, MenuProps, TableProps } from "antd";
+import { Button, Dropdown, Flex, Modal, Select, Table } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useSnapshot } from "valtio";
 
@@ -15,13 +15,47 @@ const CategoryIcon: React.FC<{ category: Category; size?: number }> = ({
   category,
   size = 16,
 }) => {
+  const [hover, setHover] = useState(false);
+  const [position, setPosition] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
+
   return (
-    <img
-      src={category.icon}
-      alt={`category ${category.slug} icon`}
-      width={size}
-      height={size}
-    />
+    <>
+      {/** biome-ignore lint/a11y/noStaticElementInteractions: <explanation> */}
+      <div
+        className="category-icon"
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        onMouseMove={(e) => setPosition({ x: e.clientX, y: e.clientY })}
+      >
+        <img
+          src={category.icon}
+          alt={`category ${category.slug} icon`}
+          width={size}
+          height={size}
+        />
+        <div
+          className="category-details"
+          style={{
+            backgroundColor: "rgba(0, 0, 0, 0.9)",
+            display: hover ? "flex" : "none",
+            flexDirection: "column",
+            position: "fixed",
+            left: position.x,
+            top: position.y,
+            padding: 8,
+            color: "white",
+            borderRadius: 8,
+            gap: 8,
+          }}
+        >
+          <span>{category.slug}</span>
+          <span>{category.name}</span>
+        </div>
+      </div>
+    </>
   );
 };
 
@@ -60,8 +94,6 @@ export const ModCard: React.FC<Props> = ({ mod, className, style }) => {
       })),
     };
   });
-
-  // const modLoaderOptions = [];
 
   // 下载按钮组
   const downloadButtonProps = useMemo<DropdownButtonProps>(() => {
@@ -108,6 +140,34 @@ export const ModCard: React.FC<Props> = ({ mod, className, style }) => {
     } satisfies DropdownButtonProps;
   }, [versions]);
   // #endregion
+
+  const versionColumns: TableProps<Version>["columns"] = [
+    {
+      key: "file-name",
+      title: "文件名",
+      dataIndex: "fileName",
+    },
+    {
+      key: "publish-time",
+      title: "发布时间",
+      dataIndex: "publishedAt",
+    },
+    {
+      key: "file-size",
+      title: "文件大小",
+      dataIndex: "fileSize",
+    },
+    {
+      key: "downloads",
+      title: "下载次数",
+      dataIndex: "downloads",
+    },
+    {
+      key: "actions",
+      title: "操作",
+      dataIndex: "id",
+    },
+  ];
 
   const categoryIcons = mod.categories.map((c) => (
     <CategoryIcon key={c.id} category={c} size={24} />
@@ -219,27 +279,33 @@ export const ModCard: React.FC<Props> = ({ mod, className, style }) => {
         }
         open={downloadVisible}
         centered
-        onOk={() => setDownloadVisible(false)}
         onCancel={() => setDownloadVisible(false)}
         footer={null}
+        width={"60vw"}
+        height={"60vh"}
       >
         <Flex
           vertical
           gap={12}
           style={{ paddingLeft: 16, paddingRight: 16, paddingBottom: 16 }}
         >
-          <Select
-            placeholder="请选择游戏版本"
-            options={gameVersionOptions}
-            value={gameVersion}
-            allowClear
-          />
-          <Select
-            placeholder="请选择模组加载器"
-            options={modLoaderOptions}
-            value={modLoader}
-            allowClear
-          />
+          <Flex gap={8}>
+            <Select
+              placeholder="请选择游戏版本"
+              options={gameVersionOptions}
+              value={gameVersion}
+              allowClear
+              style={{ flex: 1 }}
+            />
+            <Select
+              placeholder="请选择模组加载器"
+              options={modLoaderOptions}
+              value={modLoader}
+              allowClear
+              style={{ flex: 1 }}
+            />
+          </Flex>
+          <Table columns={versionColumns} dataSource={versions} size="small" />
         </Flex>
       </Modal>
     </>

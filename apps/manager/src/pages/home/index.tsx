@@ -39,15 +39,15 @@ const Home = () => {
             <span>Modpacks</span>
           </NavLink>
         </div>
-        <div className="buttons">
-          <Button variant="solid" color="primary">
+        <Flex className="buttons" align="center">
+          <Button variant="solid" color="primary" size="large">
             <Flex align="center" gap={8}>
               <MdLogin />
               <span>登录</span>
             </Flex>
           </Button>
           <Settings />
-        </div>
+        </Flex>
       </nav>
       <main>
         <Outlet />

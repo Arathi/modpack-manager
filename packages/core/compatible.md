@@ -52,3 +52,15 @@ enum Source {
 | @amcs/core | 类型 | CurseForge | 类型 | Modrinth | 类型 |
 | --- | --- | --- | --- | --- | --- |
 | id | ID | id | number | id | string |
+| modId | ID | modId | number | project_id | string
+| | | displayName | string | |
+| fileName | string | fileName | string | files[0].filename | string |
+| sha1 | string | hashes | object | files[0].hashes | object |
+| publishedAt | timestamp | fileDate | iso8601 | date_published | iso8601 |
+|  |  | fileLength | number | 
+| downloads | number | downloadCount | number | downloads | number |
+| fileSize | number | fileSizeOnDisk | number | files[0].size | number |
+| url | string | downloadUrl | url | files[0].url | url |
+| gameVersions | string[] | gameVersions | string[] | game_versions | string[] |
+| modLoaders | ModLoader[] | gameVersions | string[] | loaders | string[] |
+| dependencies | Dependency[] | dependencies | object[] | dependencies | object[] |

@@ -1,5 +1,5 @@
 import type { Category, Mod } from "@amcs/core";
-import { ModLoader, Source, SortRule, SortRuleNames } from "@amcs/core";
+import { ModLoader, SortRule, SortRuleNames, Source } from "@amcs/core";
 import { SearchOutlined } from "@ant-design/icons";
 import {
   Checkbox,
