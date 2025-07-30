@@ -9,6 +9,7 @@ import {
   Pagination,
   Segmented,
   Select,
+  Spin,
   type GetProps,
   type SelectProps,
   type SegmentedProps,
@@ -20,17 +21,13 @@ import { adapter as curseforge } from "@/utils/curseforge";
 import filterState from "@/store/search-mods-filter";
 import siteState from "@/store/site";
 import { ModCard } from "./mod-card";
+import { modLoaderOptions } from "./options";
 
 import CurseForgeLogo from "@/assets/curseforge.svg?react";
 import ModrinthLogo from "@/assets/modrinth.svg?react";
-import ForgeOutlined from "@/assets/forge.svg?react";
-import FabricOutlined from "@/assets/fabric.svg?react";
-import QuiltOutlined from "@/assets/quilt.svg?react";
-import NeoForgeOutlined from "@/assets/neoforge.svg?react";
 
 import "./index.less";
 
-type CheckboxGroupProps<T> = GetProps<typeof Checkbox.Group<T>>;
 type CategoryID = Category["id"];
 
 const CategoryCheckbox: React.FC<{
@@ -134,44 +131,6 @@ const Mods = () => {
     });
 
   // ModLoader
-  const modLoaderOptions: CheckboxGroupProps<ModLoader>["options"] = [
-    {
-      value: ModLoader.Forge,
-      label: (
-        <div className="mod-loader">
-          <ForgeOutlined width={16} height={16} />
-          <span>Forge</span>
-        </div>
-      ),
-    },
-    {
-      value: ModLoader.Fabric,
-      label: (
-        <div className="mod-loader">
-          <FabricOutlined width={16} height={16} />
-          <span>Fabric</span>
-        </div>
-      ),
-    },
-    {
-      value: ModLoader.Quilt,
-      label: (
-        <div className="mod-loader">
-          <QuiltOutlined width={16} height={16} />
-          <span>Quilt</span>
-        </div>
-      ),
-    },
-    {
-      value: ModLoader.NeoForge,
-      label: (
-        <div className="mod-loader">
-          <NeoForgeOutlined width={16} height={16} />
-          <span>NeoForge</span>
-        </div>
-      ),
-    },
-  ];
 
   // 分类
   const categoryOptions: React.ReactNode[] = [];

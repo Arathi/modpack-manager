@@ -1,19 +1,15 @@
-import type { Version, Category, Mod } from "@amcs/core";
+import type { Category, Version, Mod, ModLoader } from "@amcs/core";
 import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
-import {
-  Button,
-  Dropdown,
-  Flex,
-  Modal,
-  Select,
-  type DropDownProps,
-} from "antd";
-import type { MenuProps } from "antd/lib";
+import { Button, Dropdown, Flex, Modal, Select } from "antd";
+import type { GetProps, MenuProps } from "antd";
 import { useEffect, useMemo, useState } from "react";
+import { useSnapshot } from "valtio";
 
-interface Props {
-  mod: Mod;
-}
+import filterState from "@/store/search-mods-filter";
+import siteState from "@/store/site";
+import { modLoaderOptions } from "./options";
+
+type DropdownButtonProps = GetProps<typeof Dropdown.Button>;
 
 const CategoryIcon: React.FC<{ category: Category; size?: number }> = ({
   category,
@@ -29,36 +25,93 @@ const CategoryIcon: React.FC<{ category: Category; size?: number }> = ({
   );
 };
 
-export const ModCard: React.FC<Props> = ({ mod }) => {
+interface Props {
+  mod: Mod;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export const ModCard: React.FC<Props> = ({ mod, className, style }) => {
+  const siteSnap = useSnapshot(siteState);
+  const filterSnap = useSnapshot(filterState);
+
   const [hover, setHover] = useState(false);
   const [downloadVisible, setDownloadVisible] = useState(false);
   const [versions, setVersions] = useState<Version[]>();
   const loading = useMemo(() => versions === undefined, [versions]);
 
+  const [gameVersion, setGameVersion] = useState<string | undefined>(
+    filterSnap.gameVersion,
+  );
+  const [modLoader, setModLoader] = useState<ModLoader | undefined>();
+
   useEffect(() => {
     //
   }, []);
 
-  const categoryIcons = mod.categories.map((c) => (
-    <CategoryIcon key={c.id} category={c} size={24} />
-  ));
+  // #region 选项
+  const gameVersionOptions = siteSnap.versionGroups.map((group) => {
+    return {
+      label: group.name,
+      title: group.name,
+      options: group.versions.map((version) => ({
+        label: version.name,
+        value: version.name,
+      })),
+    };
+  });
 
-  const downloadButtons = useMemo(() => {
-    const items: MenuProps["items"] = [];
-    if (versions !== undefined) {
-      versions.forEach((v) => {
-        items.push({
-          key: v.id,
-          label: v.id,
-        });
-      });
-    }
+  // const modLoaderOptions = [];
+
+  // 下载按钮组
+  const downloadButtonProps = useMemo<DropdownButtonProps>(() => {
+    // const props: DropdownButtonProps = {};
+    // const items: MenuProps["items"] = [];
+    // if (versions !== undefined) {
+    //   versions.forEach((v) => {
+    //     items.push({
+    //       key: v.id,
+    //       label: v.id,
+    //     });
+    //   });
+    // }
+    // items.push({
+    //   key: "all",
+    //   label: "其他版本",
+    // });
+
+    // return items;
+
+    const items =
+      versions?.map((version) => ({
+        key: version.id,
+        label: `版本-${version.id}`,
+      })) ?? [];
     items.push({
       key: "all",
       label: "其他版本",
     });
-    return items;
+
+    const menu: DropdownButtonProps["menu"] = {
+      items,
+      onClick: ({ key }) => {
+        switch (key) {
+          case "all":
+            setDownloadVisible(true);
+            break;
+        }
+      },
+    };
+
+    return {
+      menu,
+    } satisfies DropdownButtonProps;
   }, [versions]);
+  // #endregion
+
+  const categoryIcons = mod.categories.map((c) => (
+    <CategoryIcon key={c.id} category={c} size={24} />
+  ));
 
   function downloadLatest() {
     console.info("下载最新版");
@@ -67,7 +120,8 @@ export const ModCard: React.FC<Props> = ({ mod }) => {
   return (
     <>
       <Flex
-        className="mod-card"
+        className={["mod-card", className].join(" ")}
+        style={style}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
       >
@@ -108,18 +162,15 @@ export const ModCard: React.FC<Props> = ({ mod }) => {
           >
             <Dropdown.Button
               type="primary"
-              menu={{
-                items: downloadButtons,
-                onClick: ({ key }) => {
-                  console.info("点击下载按钮", key);
-                  if (key === "all") {
-                    setDownloadVisible(true);
-                  }
-                },
+              onClick={() => {
+                console.info("点击下载按钮");
               }}
-              onClick={() => downloadLatest()}
+              {...downloadButtonProps}
             >
-              下载
+              <Flex align="center" gap={8}>
+                <DownloadOutlined />
+                <span>下载</span>
+              </Flex>
             </Dropdown.Button>
             <Button
               variant="solid"
@@ -177,8 +228,18 @@ export const ModCard: React.FC<Props> = ({ mod }) => {
           gap={12}
           style={{ paddingLeft: 16, paddingRight: 16, paddingBottom: 16 }}
         >
-          <Select placeholder="请选择游戏版本" />
-          <Select placeholder="请选择模组加载器" />
+          <Select
+            placeholder="请选择游戏版本"
+            options={gameVersionOptions}
+            value={gameVersion}
+            allowClear
+          />
+          <Select
+            placeholder="请选择模组加载器"
+            options={modLoaderOptions}
+            value={modLoader}
+            allowClear
+          />
         </Flex>
       </Modal>
     </>
