@@ -1,20 +1,18 @@
-import type { Category, Mod, File, Version, Source } from "@amcs/core";
+import type { Category, Mod, Version, Source } from "@amcs/core";
 import { SortRule, ModLoader } from "@amcs/core";
+import type { SearchModsParameters } from "@amcs/curseforge-api";
 import {
   Client,
   GAME_ID_MINECRAFT,
   CLASS_ID_MC_MODS,
   ModLoaderType,
   ModsSearchSortField,
-  type SearchModsParameters,
 } from "@amcs/curseforge-api";
 import axios, { type AxiosProxyConfig } from "axios";
-import semver, { SemVer } from "semver";
+import semver from "semver";
 
-import type { PagedResponse } from "./commons";
 import type { SearchModsFilter } from "@/domains/search-mods-filter";
-
-type CategoryID = Category["id"];
+import type { PagedResponse } from "./commons";
 
 const SLUG_PATTERN = /^@([a-z][0-9a-z_\-]*[0-9a-z])$/;
 const MINECRAFT_VERSION_REGEX = /^(\d+\.\d+)(\.\d+)?$/;
@@ -34,7 +32,7 @@ export interface MinecraftVersion {
 function toSemantic(version: string): string | null {
   const matches = MINECRAFT_VERSION_REGEX.exec(version);
   if (matches === null) {
-    console.warn("无效的Minecraft版本：", version);
+    // console.warn("无效的Minecraft版本：", version);
     return null;
   }
 
@@ -99,19 +97,19 @@ class CurseForgeAdapter {
     for (const gv of gvResp.data) {
       const groupName = groupNames[gv.type];
       if (groupName === undefined) {
-        console.info("不收录的版本类型：", gv.type);
+        // console.info("不收录的版本类型：", gv.type);
         continue;
       }
 
       const groupVersion = groupName.substring("Minecraft ".length);
       const groupSemVer = toSemantic(groupVersion);
       if (groupSemVer === null) {
-        console.info("分组版本号不符合规则：", groupVersion);
+        // console.info("分组版本号不符合规则：", groupVersion);
         continue;
       }
 
       const versions: MinecraftVersion[] = [];
-      console.info(`分组 ${groupName} 的版本：`, gv.versions);
+      // console.info(`分组 ${groupName} 的版本：`, gv.versions);
       for (const mcv of gv.versions) {
         const mcsv = toSemantic(mcv);
         if (mcsv === null) {
@@ -135,7 +133,7 @@ class CurseForgeAdapter {
 
     groups.sort((g1, g2) => semver.rcompare(g1.semver, g2.semver));
 
-    console.info("获取Minecraft版本分组如下：", groups);
+    // console.info("获取Minecraft版本分组如下：", groups);
     return groups;
   }
 
@@ -145,7 +143,7 @@ class CurseForgeAdapter {
       classId: CLASS_ID_MC_MODS,
     });
     const sorted = resp.data.sort((a, b) => a.name.localeCompare(b.name));
-    console.info("从CurseForge获取分类：", sorted);
+    // console.info("从CurseForge获取分类：", sorted);
 
     type ID = Category["id"];
     const map: Record<ID, Category> = {};
@@ -184,7 +182,7 @@ class CurseForgeAdapter {
       parent.children.push(category);
     }
 
-    console.info("重建分类树：", categories);
+    // console.info("重建分类树：", categories);
     return categories;
   }
 

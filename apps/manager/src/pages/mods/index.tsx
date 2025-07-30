@@ -1,11 +1,6 @@
 import type { Category, Mod } from "@amcs/core";
-import {
-  ModLoader,
-  Source,
-  SortRule,
-  SortRuleNames,
-  SourceNames,
-} from "@amcs/core";
+import { ModLoader, Source, SortRule, SortRuleNames } from "@amcs/core";
+import { SearchOutlined } from "@ant-design/icons";
 import {
   Checkbox,
   Collapse,
@@ -19,14 +14,9 @@ import {
   type SegmentedProps,
 } from "antd";
 import { useEffect, useMemo, useState } from "react";
-import { ref, useSnapshot } from "valtio";
-import { watch } from "valtio/utils";
+import { subscribe, useSnapshot } from "valtio";
 
-import {
-  adapter as curseforge,
-  type MinecraftVersionGroup,
-} from "@/utils/curseforge";
-import type { SearchModsFilter } from "@/domains/search-mods-filter";
+import { adapter as curseforge } from "@/utils/curseforge";
 import filterState from "@/store/search-mods-filter";
 import siteState from "@/store/site";
 import { ModCard } from "./mod-card";
@@ -94,6 +84,18 @@ const Mods = () => {
     source === Source.CurseForge
       ? siteSnap.curseforgeCategories
       : siteSnap.modrinthCategories;
+
+  useEffect(() => {
+    const unsubscribe = subscribe(filterState, () => {
+      console.info("模组搜索过滤器发生变化：", filterState);
+      curseforge.searchMods(filterState).then((resp) => {
+        setResults(resp.data);
+        setTotal(resp.page.total);
+      });
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // #region 选项
   // 源
@@ -174,11 +176,6 @@ const Mods = () => {
   // 分类
   const categoryOptions: React.ReactNode[] = [];
   function addCategoryOptions(categories: Category[] = [], level: number = 0) {
-    // categories.map((cat) => {
-    //   return (
-    //     <CategoryCheckbox key={cat.id} category={cat as Category} level={0} />
-    //   );
-    // });
     for (const category of categories) {
       categoryOptions.push(
         <CategoryCheckbox
@@ -252,71 +249,9 @@ const Mods = () => {
   ] satisfies SelectProps<SortRule>["options"];
   // #endregion
 
-  // const categoryOptions = useMemo(() => {
-  //   const options: React.ReactNode[] = [];
-  //   categories.forEach((c) => {
-  //     options.push(<CategoryCheckbox key={c.id} category={c} level={0} />);
-  //     const children = c.children ?? [];
-  //     children.forEach((cc) => {
-  //       options.push(<CategoryCheckbox key={cc.id} category={cc} level={1} />);
-  //     });
-  //   });
-  //   return options;
-  // }, [categories]);
-
   const modCards = useMemo(() => {
     return results.map((mod) => <ModCard key={`${mod.id}`} mod={mod} />);
   }, [results]);
-
-  // useEffect(() => {
-  //   console.info("模组源切换到：", SourceNames[source]);
-  //   if (source === Source.CurseForge) {
-  //     curseforge.getCategories().then((cats) => {
-  //       console.info("从CurseForge获取到分类：", cats);
-  //       setCategories(cats);
-  //       setCategoryIds([]);
-  //     });
-  //   } else if (source === Source.Modrinth) {
-  //     // modrinth.getCategories()
-  //     setCategories([]);
-  //     setCategoryIds([]);
-  //   }
-  // }, [source]);
-
-  // useEffect(() => {
-  //   console.info("搜索条件发生变化：", filterSnap);
-  //   // const {
-  //   //   source,
-  //   //   sortRule,
-  //   //   pageIndex,
-  //   //   pageSize,
-  //   //   gameVersion,
-  //   //   modLoaders = [],
-  //   //   categoryIds = [],
-  //   //   keyword,
-  //   // } = filterSnap;
-  //   // const filter = {
-  //   //   source,
-  //   //   sortRule,
-  //   //   pageSize,
-  //   //   pageIndex,
-  //   //   gameVersion,
-  //   //   modLoaders,
-  //   //   categoryIds,
-  //   //   keyword,
-  //   // } satisfies SearchModsFilter;
-  //   const filter = filterSnap as Readonly<SearchModsFilter>;
-  //   curseforge.searchMods(filter).then((resp) => {
-  //     const { data: mods, page } = resp;
-  //     setResults(mods);
-  //     setTotal(page.total);
-  //   });
-  // }, []);
-
-  watch((get) => {
-    const filter = get(filterState);
-    console.info("模组搜索过滤器发生变化：", filter);
-  }, {});
 
   return (
     <div className="page mods">
@@ -333,6 +268,9 @@ const Mods = () => {
         <Collapse
           className="collapse"
           bordered={false}
+          ghost={false}
+          size="large"
+          expandIconPosition="end"
           defaultActiveKey={["minecraft-versions", "mod-loaders", "categories"]}
         >
           <Collapse.Panel header="Minecraft版本" key="minecraft-versions">
@@ -383,10 +321,12 @@ const Mods = () => {
       </div>
       <div className="right">
         <Input
+          prefix={<SearchOutlined style={{ color: "#BFBFBF" }} />}
           placeholder="关键字"
           value={filterSnap.keyword}
           onChange={(event) => {
             const value = event.currentTarget.value;
+            console.info("搜索关键字发生变化：", value);
             filterState.keyword = value;
           }}
         />
@@ -414,7 +354,14 @@ const Mods = () => {
             />
           </div>
         </div>
-        {modCards}
+        <Flex
+          vertical
+          className="mod-cards"
+          gap={8}
+          style={{ marginBottom: 8 }}
+        >
+          {modCards}
+        </Flex>
       </div>
     </div>
   );
