@@ -15,13 +15,13 @@ export interface Version {
   dependencies: Dependency[];
 }
 
-interface Dependency {
+export interface Dependency {
   id: ID;
   version?: ID;
   relation?: Relation;
 }
 
-enum Relation {
+export enum Relation {
   Required,
   Optional,
   Other,

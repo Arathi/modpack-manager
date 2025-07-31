@@ -1,0 +1,80 @@
+.mod-card {
+  display: flex;
+  flex-direction: row;
+  border: none;
+  width: 100%;
+
+  background-color: #ffffff;
+  padding: 8px;
+  border-radius: 8px;
+
+  .logo {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-right: 8px;
+    // background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0;
+
+    .names {
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .description {
+      display: flex;
+      flex-direction: row;
+      justify-content: start;
+      align-items: start;
+      flex: 1;
+      font-size: 14px;
+    }
+
+    .footer {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      .categories {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .id-slug {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        color: gray;
+      }
+    }
+
+  }
+
+  .overlay {
+    position: relative;
+    width: 0;
+    // height: 100%;
+
+    .buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
+  }
+}

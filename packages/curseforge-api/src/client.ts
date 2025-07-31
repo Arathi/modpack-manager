@@ -1,16 +1,9 @@
-import type {
-  Category,
-  DataResponse,
-  File,
-  GameVersionsByType,
-  GameVersionsByTypeV2,
-  GameVersionType,
-  GetModFilesParameters,
-  ListResponse,
-  Mod,
-  PaginationResponse,
-  SearchModsParameters,
-} from "./schemas";
+import type { Category } from "./schemas/category";
+import type { File as ModFile } from "./schemas/file";
+import type { GameVersionsByType, GameVersionsByTypeV2, GameVersionType } from "./schemas/game";
+import type { Mod } from "./schemas/mod";
+import type { GetModFilesParameters, SearchModsParameters } from "./schemas/parameters";
+import type { DataResponse, ListResponse, PaginationResponse } from "./schemas/response";
 
 type SearchParams = Record<string, string | number | boolean | undefined>;
 
@@ -145,7 +138,7 @@ export abstract class Client {
     return this.get(path);
   }
 
-  async getModFile(modId: number, fileId: number): Promise<DataResponse<File>> {
+  async getModFile(modId: number, fileId: number): Promise<DataResponse<ModFile>> {
     const path = `/v1/mods/${modId}/files/${fileId}`;
     return this.get(path);
   }
@@ -159,7 +152,7 @@ export abstract class Client {
       index = DEFAULT_INDEX,
       pageSize = DEFAULT_PAGE_SIZE,
     }: GetModFilesParameters,
-  ): Promise<PaginationResponse<File>> {
+  ): Promise<PaginationResponse<ModFile>> {
     const path = `/v1/mods/${modId}/files`;
     const params = {
       gameVersion,

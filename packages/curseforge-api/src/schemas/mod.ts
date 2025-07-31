@@ -32,7 +32,7 @@ export interface Mod {
     serverAffiliation?: object;
 }
 
-export interface Screenshot {
+interface Screenshot {
     id: number;
     modId: number;
     title: string;
@@ -41,7 +41,7 @@ export interface Screenshot {
     url: string;
 }
 
-export interface Links {
+interface Links {
     websiteUrl: string;
     wikiUrl: string | null;
     issuesUrl: string | null;

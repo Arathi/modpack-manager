@@ -1,13 +1,15 @@
 {
-  "name": "@amcs/curseforge-api",
-  "version": "0.25.731",
+  "name": "@amcs/adapters",
+  "version": "0.0.0",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
+  "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
@@ -17,10 +19,17 @@
     "dev": "rslib build --watch",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@amcs/core": "workspace:*",
+    "@amcs/curseforge-api": "workspace:*",
+    "@amcs/modrinth-api": "workspace:*",
+    "axios": "^1.11.0",
+    "semver": "^7.7.2"
+  },
   "devDependencies": {
     "@rslib/core": "^0.11.0",
     "@types/node": "^22.16.5",
-    "axios": "^1.11.0",
+    "@types/semver": "^7.7.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }

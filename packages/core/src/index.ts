@@ -1,1 +1,10 @@
-export * from "./domains";
+export type { Category } from "./domains/category";
+export type { File } from "./domains/file";
+export type { Mod } from "./domains/mod";
+export { ModLoader, ModLoaderNames } from "./domains/mod-loader";
+export type { Modpack } from "./domains/modpack";
+export type { Project } from "./domains/project";
+export { SortRule, SortRuleNames } from "./domains/sort-rule";
+export { Source, SourceNames } from "./domains/source";
+export type { Dependency, Version } from "./domains/version";
+export { Relation } from "./domains/version";

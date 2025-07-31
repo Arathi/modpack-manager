@@ -1,0 +1,32 @@
+.page-mods {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  width: 1280px;
+
+  .aside {
+    display: flex;
+    flex-direction: column;
+    width: 320px;
+    gap: 8px;
+  }
+
+  & > .container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 8px;
+
+    .row-sort-pagination {
+      display: flex;
+      flex-direction: row;
+
+      .pagination-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: end;
+        flex: 1;
+      }
+    }
+  }
+}
